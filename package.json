@@ -1,0 +1,43 @@
+{
+  "name": "seneca-joi",
+  "version": "0.1.0",
+  "description": "Seneca plugin that provides joi message validation.",
+  "main": "joi.js",
+  "license": "MIT",
+  "author": "Richard Rodger (http://richardrodger.com)",
+  "contributors": [
+    "Richard Rodger (http://richardrodger.com)"
+  ],
+  "scripts": {
+    "test": "lab -v -P test -L -t 80"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/rjrodger/seneca-joi"
+  },
+  "keywords": [
+    "seneca",
+    "plugin",
+    "message",
+    "validate",
+    "joi"
+  ],
+  "dependencies": {
+    "joi": "8.1.0",
+    "lodash": "4.5.0"
+  },
+  "devDependencies": {
+    "eslint-config-seneca": "1.1.2",
+    "eslint-plugin-standard": "1.3.1",
+    "lab": "6.2.x",
+    "seneca": "senecajs/seneca"
+  },
+  "peerDependencies": {
+    "seneca": "*"
+  },
+  "files": [
+    "README.md",
+    "LICENSE",
+    "joi.js"
+  ]
+}
