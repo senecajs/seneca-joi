@@ -48,8 +48,29 @@ require('seneca')
 ```
 
 Any properties in the action pattern that are not constants are
-interpreted as_ joi_ rules.
+interpreted as _joi_ rules.
 
+You can also modify or replace the Joi schema by providing a function
+via the `joi$` property. This gives you full control of the Joi schema.
+
+```js
+var Joi = require('joi')
+
+require('seneca')
+    .use('joi')
+    .add(
+      {
+        a: 1,
+        joi$: function (schema) {
+          return schema.keys({b: Joi.required()})
+        }
+      },
+      function (msg, done) {
+        done(null, {c: msg.b})
+      })
+    .act('a:1,b:2') // valid
+    .act('a:1') // invalid as no b value
+```
 
 ## Contributing
 
