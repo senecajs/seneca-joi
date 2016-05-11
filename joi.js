@@ -14,12 +14,12 @@ joi.preload = function joi_preload (plugin) {
   return {
     extend: {
       action_modifier: function joi_modifier (actmeta) {
-        if (_.keys(actmeta.rules).length) {
+        if (_.keys(actmeta.rules).length || (actmeta.raw && actmeta.raw.joi$)) {
 
           var schema = Joi.object().keys(actmeta.rules).unknown()
 
           if (actmeta.raw && _.isFunction(actmeta.raw.joi$)) {
-            schema = actmeta.raw.joi$(schema)
+            schema = actmeta.raw.joi$(schema, actmeta)
           }
 
           actmeta.validate = function joi_validate (msg, done) {
