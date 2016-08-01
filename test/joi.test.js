@@ -10,6 +10,7 @@ var describe = lab.describe
 var it = lab.it
 
 var Joi = require('joi')
+var JoiPlugin = require('..')
 
 describe('joi', function () {
   it('happy', function (done) {
@@ -68,5 +69,14 @@ describe('joi', function () {
         Assert.equal(3, out.c)
         done()
       })
+  })
+
+  it('defensives', function (done) {
+    var pmeta = JoiPlugin.preload({})
+    var actmod = pmeta.extend.action_modifier
+    var actmeta = {}
+    actmod(actmeta)
+    Assert.equal(void 0, actmeta.validate)
+    done()
   })
 })

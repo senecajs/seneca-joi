@@ -9,7 +9,7 @@
     "Richard Rodger (http://richardrodger.com)"
   ],
   "scripts": {
-    "test": "lab -v -P test -L -t 80"
+    "test": "lab -v -P test -L -t 90 -I Reflect"
   },
   "repository": {
     "type": "git",
