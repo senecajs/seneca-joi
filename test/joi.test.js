@@ -79,4 +79,83 @@ describe('joi', function () {
     Assert.equal(void 0, actmeta.validate)
     done()
   })
+
+  it('parambulator-legacy', function (done) {
+    Seneca({log: 'silent', legacy: {error_codes: false, validate: false}})
+      .use('../joi', {legacy: true})
+      .add({
+        a: 0
+      }, function (msg, done) {
+        done(null, {c: 0})
+      })
+      .add({
+        a: 1,
+        b: { required$: true }
+      }, function (msg, done) {
+        done(null, {c: 1})
+      })
+      .add({
+        a: 2,
+        b: { d: {string$: true} }
+      }, function (msg, done) {
+        done(null, {c: 2})
+      })
+      .add({
+        a: 3,
+        b: { e: 'required$' }
+      }, function (msg, done) {
+        done(null, {c: 3})
+      })
+      .act('a:0', function (err, out) {
+        if (err) return done(err)
+        Assert.equal(0, out.c)
+
+        this.act('a:1,x:1', function (err, out) {
+          if (err) return done(err)
+          Assert.equal(1, out.c)
+
+          this.act('a:2,b:1', function (err, out) {
+            if (err) return done(err)
+            Assert.equal(2, out.c)
+
+            this.act('a:3,b:1', function (err, out) {
+              if (err) return done(err)
+              Assert.equal(3, out.c)
+
+              legacy_false()
+            })
+          })
+        })
+      })
+
+    function legacy_false () {
+      Seneca({log: 'silent', legacy: {error_codes: false, validate: false}})
+        .use('../joi', {legacy: false})
+        .add({
+          a: 0
+        }, function (msg, done) {
+          done(null, {c: 0})
+        })
+        .add({
+          a: 1,
+          b: {c: 2}
+        }, function (msg, done) {
+          done(null, {c: 1})
+        })
+        .act('a:0,b:1', function (err, out) {
+          if (err) return done(err)
+          Assert.equal(0, out.c)
+
+          this.act('a:1,b:{c:2}', function (err, out) {
+            if (err) return done(err)
+            Assert.equal(1, out.c)
+
+            this.act('a:1,b:2', function (err, out) {
+              Assert.equal('act_invalid_msg', err.code)
+              done()
+            })
+          })
+        })
+    }
+  })
 })
