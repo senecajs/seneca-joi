@@ -1,6 +1,6 @@
 {
   "name": "seneca-joi",
-  "version": "0.2.1",
+  "version": "0.3.0",
   "description": "Seneca plugin that provides joi message validation.",
   "main": "joi.js",
   "license": "MIT",
