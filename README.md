@@ -93,7 +93,7 @@ Licensed under [MIT][].
 [travis-badge]: https://travis-ci.org/senecajs/seneca-joi.svg
 [travis-url]: https://travis-ci.org/senecajs/seneca-joi
 [gitter-badge]: https://badges.gitter.im/Join%20Chat.svg
-[gitter-url]: https://gitter.im/rjrodger/seneca-joi
-[github issue]: https://github.com/rjrodger/seneca-joi/issues
-[david-badge]: https://david-dm.org/rjrodger/seneca-joi.svg
-[david-url]: https://david-dm.org/rjrodger/seneca-joi
+[gitter-url]: https://gitter.im/senecajs/seneca
+[github issue]: https://github.com/senecajs/seneca-joi/issues
+[david-badge]: https://david-dm.org/senecajs/seneca-joi.svg
+[david-url]: https://david-dm.org/senecajs/seneca-joi
