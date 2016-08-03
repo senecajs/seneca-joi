@@ -158,4 +158,17 @@ describe('joi', function () {
         })
     }
   })
+
+  it('is_parambulator', function (done) {
+    Assert.ok(JoiPlugin._test$.is_parambulator({
+      empty: null,
+      use: {},
+      config: { 'object$': true },
+      plugin: { 'string$': true } }))
+
+    Assert.ok(!JoiPlugin._test$.is_parambulator(
+      {a: {b: {c: {d: {e: {f: {g: {h: {i: {j: {k: {l: 1}}}}}}}}}}}}))
+
+    done()
+  })
 })

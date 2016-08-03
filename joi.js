@@ -16,21 +16,6 @@ joi.preload = function joi_preload (plugin) {
   // Default should be false for Seneca 3.x
   var legacy = null == options.legacy ? true : !!options.legacy
 
-  function is_parambulator (rules) {
-    for (var p in rules) {
-      if (/\$$/.exec(p)) {
-        return true
-      }
-      else if ('string' === typeof rules[p]) {
-        return !!/\$$/.exec('' + rules[p])
-      }
-      else {
-        return is_parambulator(rules[p])
-      }
-    }
-    return false
-  }
-
   return {
     extend: {
       action_modifier: function joi_modifier (actmeta) {
@@ -61,5 +46,28 @@ joi.preload = function joi_preload (plugin) {
   }
 }
 
+function is_parambulator (rules, depth) {
+  depth = depth || 0
+
+  if (11 < depth) {
+    return false
+  }
+
+  for (var p in rules) {
+    if ((rules[p] && !rules[p].isJoi) &&
+        (/\$$/.exec(p) ||
+         (!!/\$$/.exec('' + rules[p])) ||
+         is_parambulator(rules[p], ++depth))) {
+      return true
+    }
+  }
+
+  return false
+}
+
 
 module.exports = joi
+
+module.exports._test$ = {
+  is_parambulator: is_parambulator
+}
