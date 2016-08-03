@@ -27,7 +27,7 @@ require('seneca')({
 ## Usage
 
 You can validate action messages by providing
-[joi](github.com/hapijs/joi) rules as part of the
+[joi](https://github.com/hapijs/joi) rules as part of the
 action definition.
 
 ```js
@@ -90,8 +90,8 @@ Licensed under [MIT][].
 [Seneca.js]: https://www.npmjs.com/package/seneca
 [@senecajs]: http://twitter.com/senecajs
 [senecajs.org]: http://senecajs.org/
-[travis-badge]: https://travis-ci.org/rjrodger/seneca-joi.svg
-[travis-url]: https://travis-ci.org/rjrodger/seneca-joi
+[travis-badge]: https://travis-ci.org/senecajs/seneca-joi.svg
+[travis-url]: https://travis-ci.org/senecajs/seneca-joi
 [gitter-badge]: https://badges.gitter.im/Join%20Chat.svg
 [gitter-url]: https://gitter.im/rjrodger/seneca-joi
 [github issue]: https://github.com/rjrodger/seneca-joi/issues
