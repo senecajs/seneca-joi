@@ -1,5 +1,9 @@
 sudo: false
 language: node_js
+
+env:
+  - SENECA_VER=@3.x.x
+
 node_js:
   - "6"
   - "4"
