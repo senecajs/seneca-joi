@@ -9,7 +9,7 @@
     "Richard Rodger (http://richardrodger.com)"
   ],
   "scripts": {
-    "test": "lab -v -P test -L -t 90 -I Reflect",
+    "test": "lab -v -P test -L -t 90",
     "coveralls": "lab -s -P test -r lcov | coveralls",
     "coverage": "lab -v -P test -L -t 90 -r html > docs/coverage.html",
     "annotate": "docco joi.js -o docs/annotated"

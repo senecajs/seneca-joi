@@ -13,8 +13,7 @@ function joi (options) {
 joi.preload = function joi_preload (plugin) {
   var options = plugin.options || {}
 
-  // Default should be false for Seneca 3.x
-  var legacy = null == options.legacy ? true : !!options.legacy
+  var legacy = null == options.legacy ? false : !!options.legacy
 
   return {
     extend: {
