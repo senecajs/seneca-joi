@@ -1,4 +1,4 @@
-## 1.0.0 5-09-2016
+## 1.0.0 6-09-2016
 
 * Breaking change: parambulator check is off by default PR#11
 * Updated dependencies
