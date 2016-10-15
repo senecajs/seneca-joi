@@ -33,7 +33,7 @@ action definition.
 ```js
 var Joi = require('joi')
 
-require('seneca')
+require('seneca')()
     .use('joi')
     .add(
       {
@@ -56,7 +56,7 @@ via the `joi$` property. This gives you full control of the Joi schema.
 ```js
 var Joi = require('joi')
 
-require('seneca')
+require('seneca')()
     .use('joi')
     .add(
       {
