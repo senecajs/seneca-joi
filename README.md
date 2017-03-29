@@ -18,10 +18,11 @@ npm install seneca-joi
 And in your code:
 
 ```js
-require('seneca')({
-    legacy: {validate: false} // needed if using Seneca 2.x
+require('seneca')
+  .use('seneca-joi', {
+    legacy: {validate: false}, // needed if using Seneca 2.x
+    allowUnknown: true    // example of passing in Joi options
   })
-  .use('joi')
 ```
 
 ## Usage
