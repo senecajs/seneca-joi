@@ -35,7 +35,7 @@ joi.preload = function joi_preload (plugin) {
           }
 
           actmeta.validate = function joi_validate (msg, done) {
-            Joi.validate(msg, schema, done)
+            Joi.validate(msg, schema, options, done)
           }
         }
 
