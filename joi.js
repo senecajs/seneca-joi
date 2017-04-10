@@ -34,11 +34,8 @@ joi.preload = function joi_preload (plugin) {
             schema = joi_mod(schema, actmeta)
           }
 
-          // "legacy" is not a valid Joi option, so we remove it if present
-          delete options.legacy
-
           actmeta.validate = function joi_validate (msg, done) {
-            Joi.validate(msg, schema, options, done)
+            Joi.validate(msg, schema, options.joiOptions, done)
           }
         }
 
