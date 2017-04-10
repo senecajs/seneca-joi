@@ -19,7 +19,7 @@ And in your code:
 
 ```js
 require('seneca')({
-  legacy: {validate: false}, // needed if using Seneca 2.x
+  legacy: {validate: false} // needed if using Seneca 2.x
 })
 .use('seneca-joi', {
   allowUnknown: true    // example of passing in Joi options
