@@ -1,16 +1,12 @@
-/* Copyright (c) 2016 Richard Rodger and other contributors, MIT License */
+/* Copyright (c) 2016-2017 Richard Rodger and other contributors, MIT License */
 'use strict'
 
-var _ = require('lodash')
 var Joi = require('joi')
 
-
-function joi (options) {
-}
-
+function joi() {}
 
 // Has to be preloaded as seneca.add does not wait for plugins to load.
-joi.preload = function joi_preload (plugin) {
+joi.preload = function joi_preload(plugin) {
   var options = plugin.options || {}
 
   // Default should be false for Seneca 3.x
@@ -18,35 +14,35 @@ joi.preload = function joi_preload (plugin) {
 
   return {
     extend: {
-      action_modifier: function joi_modifier (actmeta) {
-        if (legacy && is_parambulator(actmeta.rules)) {
-          return actmeta
+      action_modifier: function joi_modifier(actdef) {
+        if (legacy && is_parambulator(actdef.rules)) {
+          return actdef
         }
 
-        var joi_mod = _.isFunction(actmeta.raw && actmeta.raw.joi$)
-              ? actmeta.raw.joi$
-              : void 0
+        var joi_mod = (actdef.raw && actdef.raw.joi$) || void 0
 
-        if (_.keys(actmeta.rules).length || joi_mod) {
-
-          var schema = Joi.object().keys(actmeta.rules).unknown()
+        if (
+          (actdef.rules && Object.keys(actdef.rules).length) ||
+          'function' === typeof joi_mod
+        ) {
+          var schema = Joi.object().keys(actdef.rules).unknown()
 
           if (joi_mod) {
-            schema = joi_mod(schema, actmeta)
+            schema = joi_mod(schema, actdef)
           }
 
-          actmeta.validate = function joi_validate (msg, done) {
+          actdef.validate = function joi_validate(msg, done) {
             Joi.validate(msg, schema, done)
           }
         }
 
-        return actmeta
+        return actdef
       }
     }
   }
 }
 
-function is_parambulator (rules, depth) {
+function is_parambulator(rules, depth) {
   depth = depth || 0
 
   if (11 < depth) {
@@ -54,17 +50,19 @@ function is_parambulator (rules, depth) {
   }
 
   for (var p in rules) {
-    if ((rules[p] && !rules[p].isJoi) &&
-        (/\$$/.exec(p) ||
-         (!!/\$$/.exec('' + rules[p])) ||
-         is_parambulator(rules[p], ++depth))) {
+    if (
+      rules[p] &&
+      !rules[p].isJoi &&
+      (/\$$/.exec(p) ||
+        !!/\$$/.exec('' + rules[p]) ||
+        is_parambulator(rules[p], ++depth))
+    ) {
       return true
     }
   }
 
   return false
 }
-
 
 module.exports = joi
 
