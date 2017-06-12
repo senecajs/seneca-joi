@@ -22,7 +22,7 @@ require('seneca')({
   legacy: {validate: false} // needed if using Seneca 2.x
 })
 .use('seneca-joi', {
-  joiOptions: {allowUnknown: true}    // example of passing in Joi options
+  joi: {allowUnknown: true}    // example of passing in Joi options
 })
 ```
 
