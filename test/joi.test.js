@@ -13,25 +13,25 @@ var Joi = require('joi')
 var JoiPlugin = require('..')
 
 describe('joi', function() {
-  it('happy', function(done) {
+  it('happy', function(fin) {
     Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
       .use('../joi')
       .add({ a: 1, b: Joi.required() }, function(msg, done) {
         done(null, { c: 3 })
       })
       .act('a:1,b:2', function(err, out) {
-        if (err) return done(err)
+        if (err) return fin(err)
 
         Assert.equal(3, out.c)
 
         this.act('a:1', function(err) {
           Assert.equal('act_invalid_msg', err.code)
-          done()
+          fin()
         })
       })
   })
 
-  it('custom', function(done) {
+  it('custom', function(fin) {
     Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
       .use('../joi')
       .add(
@@ -46,18 +46,18 @@ describe('joi', function() {
         }
       )
       .act('a:1,b:2', function(err, out) {
-        if (err) return done(err)
+        if (err) return fin(err)
 
         Assert.equal(3, out.c)
 
         this.act('a:1', function(err) {
           Assert.equal('act_invalid_msg', err.code)
-          done()
+          fin()
         })
       })
   })
 
-  it('edge', function(done) {
+  it('edge', function(fin) {
     Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
       .use('../joi')
       .add(
@@ -70,23 +70,23 @@ describe('joi', function() {
         }
       )
       .act('a:1,b:2', function(err, out) {
-        if (err) return done(err)
+        if (err) return fin(err)
 
         Assert.equal(3, out.c)
-        done()
+        fin()
       })
   })
 
-  it('defensives', function(done) {
+  it('defensives', function(fin) {
     var pmeta = JoiPlugin.preload({})
     var actmod = pmeta.extend.action_modifier
     var actmeta = {}
     actmod(actmeta)
     Assert.equal(void 0, actmeta.validate)
-    done()
+    fin()
   })
 
-  it('parambulator-legacy', function(done) {
+  it('parambulator-legacy', function(fin) {
     Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
       .use('../joi', { legacy: true })
       .add(
@@ -125,19 +125,19 @@ describe('joi', function() {
         }
       )
       .act('a:0', function(err, out) {
-        if (err) return done(err)
+        if (err) return fin(err)
         Assert.equal(0, out.c)
 
         this.act('a:1,x:1', function(err, out) {
-          if (err) return done(err)
+          if (err) return fin(err)
           Assert.equal(1, out.c)
 
           this.act('a:2,b:1', function(err, out) {
-            if (err) return done(err)
+            if (err) return fin(err)
             Assert.equal(2, out.c)
 
             this.act('a:3,b:1', function(err, out) {
-              if (err) return done(err)
+              if (err) return fin(err)
               Assert.equal(3, out.c)
 
               legacy_false()
@@ -167,23 +167,23 @@ describe('joi', function() {
           }
         )
         .act('a:0,b:1', function(err, out) {
-          if (err) return done(err)
+          if (err) return fin(err)
           Assert.equal(0, out.c)
 
           this.act('a:1,b:{c:2}', function(err, out) {
-            if (err) return done(err)
+            if (err) return fin(err)
             Assert.equal(1, out.c)
 
             this.act('a:1,b:2', function(err) {
               Assert.equal('act_invalid_msg', err.code)
-              done()
+              fin()
             })
           })
         })
     }
   })
 
-  it('is_parambulator', function(done) {
+  it('is_parambulator', function(fin) {
     Assert.ok(
       JoiPlugin._test$.is_parambulator({
         empty: null,
@@ -203,6 +203,29 @@ describe('joi', function() {
       })
     )
 
-    done()
+    fin()
+  })
+
+  it('parambulator-legacy test default value seneca > 3.x', function (fin) {
+    var si = Seneca({log: 'silent', legacy: {error_codes: false, validate: false}})
+    if (si.version < '3.0.0') {
+      return fin()
+    }
+
+    si.use('../joi')
+    si.ready(function () {
+      si.add({
+        a: 2,
+        b: { d: {string$: true} }
+      }, function (msg, done) {
+        done(null, {c: 2})
+      })
+
+      si.act('a:2,b:1', function (err) {
+        Assert.equal('act_invalid_msg', err.code)
+
+        fin()
+      })
+    })
   })
 })
