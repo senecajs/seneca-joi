@@ -19,9 +19,11 @@ And in your code:
 
 ```js
 require('seneca')({
-    legacy: {validate: false} // needed if using Seneca 2.x
-  })
-  .use('joi')
+  legacy: {validate: false} // needed if using Seneca 2.x
+})
+.use('seneca-joi', {
+  joiOptions: {allowUnknown: true}    // example of passing in Joi options
+})
 ```
 
 ## Usage

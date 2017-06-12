@@ -30,8 +30,8 @@ joi.preload = function joi_preload(plugin) {
             schema = joi_mod(schema, actdef)
           }
 
-          actdef.validate = function joi_validate(msg, done) {
-            Joi.validate(msg, schema, done)
+          actdef.validate = function joi_validate (msg, done) {
+            Joi.validate(msg, schema, options.joi, done)
           }
         }
 
