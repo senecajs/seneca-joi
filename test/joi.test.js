@@ -206,22 +206,28 @@ describe('joi', function() {
     fin()
   })
 
-  it('parambulator-legacy test default value seneca > 3.x', function (fin) {
-    var si = Seneca({log: 'silent', legacy: {error_codes: false, validate: false}})
+  it('parambulator-legacy test default value seneca > 3.x', function(fin) {
+    var si = Seneca({
+      log: 'silent',
+      legacy: { error_codes: false, validate: false }
+    })
     if (si.version < '3.0.0') {
       return fin()
     }
 
     si.use('../joi')
-    si.ready(function () {
-      si.add({
-        a: 2,
-        b: { d: {string$: true} }
-      }, function (msg, done) {
-        done(null, {c: 2})
-      })
+    si.ready(function() {
+      si.add(
+        {
+          a: 2,
+          b: { d: { string$: true } }
+        },
+        function(msg, done) {
+          done(null, { c: 2 })
+        }
+      )
 
-      si.act('a:2,b:1', function (err) {
+      si.act('a:2,b:1', function(err) {
         Assert.equal('act_invalid_msg', err.code)
 
         fin()

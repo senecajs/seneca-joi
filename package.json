@@ -26,12 +26,12 @@
     "joi"
   ],
   "dependencies": {
-    "joi": "10.5.2"
+    "joi": "^10.5.2"
   },
   "devDependencies": {
-    "prettier": "1.4.4",
     "lab": "13.1.x",
-    "seneca": "plugin"
+    "prettier": "^1.4.4",
+    "seneca": "^3.4.3"
   },
   "files": [
     "README.md",
