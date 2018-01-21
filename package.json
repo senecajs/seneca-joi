@@ -37,8 +37,5 @@
     "README.md",
     "LICENSE",
     "joi.js"
-  ],
-  "pre-commit": [
-    "test"
   ]
 }
