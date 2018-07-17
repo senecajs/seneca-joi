@@ -31,7 +31,10 @@ joi.preload = function joi_preload(plugin) {
           }
 
           actdef.validate = function joi_validate (msg, done) {
-            Joi.validate(msg, schema, options.joi, done)
+            Joi.validate(msg, schema, options.joi, (err,value) => {
+              Object.assign(msg, err ? {} : value );
+              done(err);
+            })
           }
         }
 
