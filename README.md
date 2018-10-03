@@ -7,6 +7,7 @@
 [![npm version][npm-badge]][npm-url]
 [![Dependency Status][david-badge]][david-url]
 [![Build Status][travis-badge]][travis-url]
+[![Coverage Status](https://coveralls.io/repos/github/senecajs/seneca-joi/badge.svg?branch=master)](https://coveralls.io/github/senecajs/seneca-joi?branch=master)
 [![Gitter][gitter-badge]][gitter-url]
 
 
