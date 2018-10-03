@@ -82,7 +82,6 @@ testing, or new features please get in touch.
 
 
 ## License
-Copyright (c) 2016, Richard Rodger and other contributors.
 Licensed under [MIT][].
 
 [MIT]: ./LICENSE
