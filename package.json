@@ -33,6 +33,7 @@
   "devDependencies": {
     "prettier": "1",
     "lab": "14",
+    "coveralls": "3",
     "seneca": "plugin"
   },
   "files": [
