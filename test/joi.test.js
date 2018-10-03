@@ -13,11 +13,13 @@ var Joi = require('joi')
 var JoiPlugin = require('..')
 
 describe('joi', function() {
+  // NOTE: not using seneca.test(fin) as need to verify errors directly
+
   it('happy', function(fin) {
     Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
       .use('../joi')
-      .add({ a: 1, b: Joi.required() }, function(msg, done) {
-        done(null, { c: 3 })
+      .add({ a: 1, b: Joi.required() }, function(msg, reply) {
+        reply(null, { c: 3 })
       })
       .act('a:1,b:2', function(err, out) {
         if (err) return fin(err)
@@ -31,6 +33,44 @@ describe('joi', function() {
       })
   })
 
+  it('action-validate', function(fin) {
+    a1.validate = {
+      b: Joi.required()
+    }
+
+    function a1(msg, reply) {
+      reply(null, { c: 3 })
+    }
+
+    Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
+      .use('../joi')
+      .add({ a: 1 }, a1)
+      .act('a:1,b:2', function(err, out) {
+        if (err) return fin(err)
+
+        Assert.equal(3, out.c)
+
+        this.act('a:1', function(err) {
+          Assert.equal('act_invalid_msg', err.code)
+          fin()
+        })
+      })
+  })
+
+  // Should ignore joi rules if plugin not loaded
+  it('no-joi', function(fin) {
+    Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
+      .add({ a: 1, b: Joi.required() }, function(msg, reply) {
+        reply(null, { c: 3 })
+      })
+      .act('a:1,b:2', function(err, out) {
+        if (err) return fin(err)
+
+        Assert.equal(3, out.c)
+        fin()
+      })
+  })
+
   it('custom', function(fin) {
     Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
       .use('../joi')
@@ -41,8 +81,8 @@ describe('joi', function() {
             return schema.keys({ b: Joi.required() })
           }
         },
-        function(msg, done) {
-          done(null, { c: 3 })
+        function(msg, reply) {
+          reply(null, { c: 3 })
         }
       )
       .act('a:1,b:2', function(err, out) {
@@ -65,8 +105,8 @@ describe('joi', function() {
           a: 1,
           joi$: 1
         },
-        function(msg, done) {
-          done(null, { c: 3 })
+        function(msg, reply) {
+          reply(null, { c: 3 })
         }
       )
       .act('a:1,b:2', function(err, out) {
@@ -93,8 +133,8 @@ describe('joi', function() {
         {
           a: 0
         },
-        function(msg, done) {
-          done(null, { c: 0 })
+        function(msg, reply) {
+          reply(null, { c: 0 })
         }
       )
       .add(
@@ -102,8 +142,8 @@ describe('joi', function() {
           a: 1,
           b: { required$: true }
         },
-        function(msg, done) {
-          done(null, { c: 1 })
+        function(msg, reply) {
+          reply(null, { c: 1 })
         }
       )
       .add(
@@ -111,8 +151,8 @@ describe('joi', function() {
           a: 2,
           b: { d: { string$: true } }
         },
-        function(msg, done) {
-          done(null, { c: 2 })
+        function(msg, reply) {
+          reply(null, { c: 2 })
         }
       )
       .add(
@@ -120,8 +160,8 @@ describe('joi', function() {
           a: 3,
           b: { e: 'required$' }
         },
-        function(msg, done) {
-          done(null, { c: 3 })
+        function(msg, reply) {
+          reply(null, { c: 3 })
         }
       )
       .act('a:0', function(err, out) {
@@ -153,8 +193,8 @@ describe('joi', function() {
           {
             a: 0
           },
-          function(msg, done) {
-            done(null, { c: 0 })
+          function(msg, reply) {
+            reply(null, { c: 0 })
           }
         )
         .add(
@@ -162,8 +202,8 @@ describe('joi', function() {
             a: 1,
             b: { c: 2 }
           },
-          function(msg, done) {
-            done(null, { c: 1 })
+          function(msg, reply) {
+            reply(null, { c: 1 })
           }
         )
         .act('a:0,b:1', function(err, out) {
@@ -185,7 +225,7 @@ describe('joi', function() {
 
   it('is_parambulator', function(fin) {
     Assert.ok(
-      JoiPlugin._test$.is_parambulator({
+      JoiPlugin.intern.is_parambulator({
         empty: null,
         use: {},
         config: { object$: true },
@@ -194,7 +234,7 @@ describe('joi', function() {
     )
 
     Assert.ok(
-      !JoiPlugin._test$.is_parambulator({
+      !JoiPlugin.intern.is_parambulator({
         a: {
           b: {
             c: { d: { e: { f: { g: { h: { i: { j: { k: { l: 1 } } } } } } } } }
@@ -206,22 +246,28 @@ describe('joi', function() {
     fin()
   })
 
-  it('parambulator-legacy test default value seneca > 3.x', function (fin) {
-    var si = Seneca({log: 'silent', legacy: {error_codes: false, validate: false}})
+  it('parambulator-legacy test default value seneca > 3.x', function(fin) {
+    var si = Seneca({
+      log: 'silent',
+      legacy: { error_codes: false, validate: false }
+    })
     if (si.version < '3.0.0') {
       return fin()
     }
 
     si.use('../joi')
-    si.ready(function () {
-      si.add({
-        a: 2,
-        b: { d: {string$: true} }
-      }, function (msg, done) {
-        done(null, {c: 2})
-      })
+    si.ready(function() {
+      si.add(
+        {
+          a: 2,
+          b: { d: { string$: true } }
+        },
+        function(msg, reply) {
+          reply(null, { c: 2 })
+        }
+      )
 
-      si.act('a:2,b:1', function (err) {
+      si.act('a:2,b:1', function(err) {
         Assert.equal('act_invalid_msg', err.code)
 
         fin()

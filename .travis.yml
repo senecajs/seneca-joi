@@ -2,12 +2,12 @@ language: node_js
 sudo: false
 
 env:
-  - SENECA_VER=seneca@2.x.x
   - SENECA_VER=seneca@3.x.x
   - SENECA_VER=seneca@plugin
   - SENECA_VER=senecajs/seneca
 
 node_js:
+  - "10"
   - "8"
   - "6"
   - "4"

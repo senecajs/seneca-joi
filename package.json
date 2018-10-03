@@ -9,10 +9,12 @@
     "Richard Rodger (http://richardrodger.com)"
   ],
   "scripts": {
-    "test": "lab -v -P test -L -t 90",
+    "test": "lab -P test -t 90 -I URL,URLSearchParams,BigUint64Array,BigInt64Array,BigInt",
+    "prettier": "prettier --write --no-semi --single-quote *.js lib/*.js test/*.js",
     "coveralls": "lab -s -P test -r lcov | coveralls",
-    "coverage": "lab -v -P test -L -t 90 -r html > docs/coverage.html",
-    "prettier": "prettier --write --no-semi --single-quote joi.js lib/*.js test/*.js"
+    "clean": "rm -rf node_modules yarn.lock package-lock.json",
+    "repo-tag": "REPO_VERSION=`node -e \"console.log(require('./package').version)\"`; echo TAG: v$REPO_VERSION; git commit -a -m v$REPO_VERSION; git push; git tag v$REPO_VERSION; git push --tags;",
+    "repo-publish": "npm run repo-tag; npm publish"
   },
   "repository": {
     "type": "git",
@@ -26,19 +28,16 @@
     "joi"
   ],
   "dependencies": {
-    "joi": "10.5.2"
+    "joi": "13.7"
   },
   "devDependencies": {
-    "prettier": "1.4.4",
-    "lab": "13.1.x",
+    "prettier": "1",
+    "lab": "14",
     "seneca": "plugin"
   },
   "files": [
     "README.md",
     "LICENSE",
     "joi.js"
-  ],
-  "pre-commit": [
-    "test"
   ]
 }
