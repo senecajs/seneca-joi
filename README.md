@@ -36,7 +36,7 @@ action definition.
 var Joi = require('joi')
 
 require('seneca')
-    .use('joi')
+    .use('seneca-joi')
     .add(
       {
         a: 1,
@@ -59,7 +59,7 @@ via the `joi$` property. This gives you full control of the Joi schema.
 var Joi = require('joi')
 
 require('seneca')
-    .use('joi')
+    .use('seneca-joi')
     .add(
       {
         a: 1,
