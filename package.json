@@ -1,6 +1,6 @@
 {
   "name": "seneca-joi",
-  "version": "2.0.0",
+  "version": "3.0.0",
   "description": "Seneca plugin that provides joi message validation.",
   "main": "joi.js",
   "license": "MIT",
@@ -13,8 +13,8 @@
     "prettier": "prettier --write --no-semi --single-quote *.js lib/*.js test/*.js",
     "coveralls": "lab -s -P test -r lcov | coveralls",
     "clean": "rm -rf node_modules yarn.lock package-lock.json",
-    "repo-tag": "REPO_VERSION=`node -e \"console.log(require('./package').version)\"`; echo TAG: v$REPO_VERSION; git commit -a -m v$REPO_VERSION; git push; git tag v$REPO_VERSION; git push --tags;",
-    "repo-publish": "npm run repo-tag; npm publish"
+    "repo-tag": "REPO_VERSION=`node -e \"console.log(require('./package').version)\"` && echo TAG: v$REPO_VERSION && git commit -a -m v$REPO_VERSION && git push && git tag v$REPO_VERSION && git push --tags;",
+    "repo-publish": "npm test && npm run repo-tag && npm publish"
   },
   "repository": {
     "type": "git",
