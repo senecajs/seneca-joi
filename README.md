@@ -7,6 +7,7 @@
 [![npm version][npm-badge]][npm-url]
 [![Dependency Status][david-badge]][david-url]
 [![Build Status][travis-badge]][travis-url]
+[![Maintainability](https://api.codeclimate.com/v1/badges/1c51502c58c942a9c583/maintainability)](https://codeclimate.com/github/senecajs/seneca-joi/maintainability)
 [![Gitter][gitter-badge]][gitter-url]
 
 

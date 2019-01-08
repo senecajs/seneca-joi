@@ -28,13 +28,14 @@
     "joi"
   ],
   "dependencies": {
-    "joi": "13.7"
+    "joi": "14"
   },
   "devDependencies": {
-    "prettier": "1",
-    "lab": "14",
     "coveralls": "3",
-    "seneca": "plugin"
+    "lab": "18",
+    "prettier": "1",
+    "seneca": "senecajs/seneca",
+    "seneca-promisify": "0"
   },
   "files": [
     "README.md",

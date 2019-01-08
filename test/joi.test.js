@@ -1,4 +1,4 @@
-/* Copyright (c) 2016-2017 Richard Rodger and other contributors, MIT License */
+/* Copyright © 2016-2018 Richard Rodger and other contributors, MIT License. */
 'use strict'
 
 var Assert = require('assert')
@@ -15,120 +15,125 @@ var JoiPlugin = require('..')
 describe('joi', function() {
   // NOTE: not using seneca.test(fin) as need to verify errors directly
 
-  it('happy', function(fin) {
-    Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
-      .use('../joi')
-      .add({ a: 1, b: Joi.required() }, function(msg, reply) {
-        reply(null, { c: 3 })
-      })
-      .act('a:1,b:2', function(err, out) {
-        if (err) return fin(err)
+  function make_seneca() {
+    return Seneca({
+      log: 'silent',
+      legacy: { error_codes: false, validate: false }
+    })
+      .use('promisify')
+      .use(JoiPlugin)
+  }
 
-        Assert.equal(3, out.c)
+  it('happy', async () => {
+    const seneca = await make_seneca()
 
-        this.act('a:1', function(err) {
-          Assert.equal('act_invalid_msg', err.code)
-          fin()
-        })
-      })
+    seneca.message({ a: 1, b: Joi.required() }, async function(msg) {
+      return { c: 3 }
+    })
+
+    var out = await seneca.post('a:1,b:2')
+    Assert.equal(3, out.c)
+
+    try {
+      await seneca.post('a:1')
+      Assert.fail()
+    } catch (err) {
+      Assert.equal('act_invalid_msg', err.code)
+    }
   })
 
-  it('action-validate', function(fin) {
+  it('action-validate', async () => {
     a1.validate = {
       b: Joi.required()
     }
 
-    function a1(msg, reply) {
-      reply(null, { c: 3 })
+    async function a1(msg) {
+      return { c: 3 }
     }
 
-    Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
-      .use('../joi')
-      .add({ a: 1 }, a1)
-      .act('a:1,b:2', function(err, out) {
-        if (err) return fin(err)
+    const seneca = await make_seneca()
+    seneca.message({ a: 1 }, a1)
 
-        Assert.equal(3, out.c)
+    var out = await seneca.post('a:1,b:2')
+    Assert.equal(3, out.c)
 
-        this.act('a:1', function(err) {
-          Assert.equal('act_invalid_msg', err.code)
-          fin()
-        })
-      })
+    try {
+      await seneca.post('a:1')
+      Assert.fail()
+    } catch (err) {
+      Assert.equal('act_invalid_msg', err.code)
+    }
   })
 
   // Should ignore joi rules if plugin not loaded
-  it('no-joi', function(fin) {
-    Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
+  it('no-joi', async () => {
+    const seneca = Seneca({
+      log: 'silent',
+      legacy: { error_codes: false, validate: false }
+    })
+      .use('promisify')
       .add({ a: 1, b: Joi.required() }, function(msg, reply) {
         reply(null, { c: 3 })
       })
-      .act('a:1,b:2', function(err, out) {
-        if (err) return fin(err)
 
-        Assert.equal(3, out.c)
-        fin()
-      })
+    var out = await seneca.post('a:1,b:2')
+    Assert.equal(3, out.c)
   })
 
-  it('custom', function(fin) {
-    Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
-      .use('../joi')
-      .add(
-        {
-          a: 1,
-          joi$: function(schema) {
-            return schema.keys({ b: Joi.required() })
-          }
-        },
-        function(msg, reply) {
-          reply(null, { c: 3 })
+  it('custom', async () => {
+    const seneca = await make_seneca().add(
+      {
+        a: 1,
+        joi$: function(schema) {
+          return schema.keys({ b: Joi.required() })
         }
-      )
-      .act('a:1,b:2', function(err, out) {
-        if (err) return fin(err)
+      },
+      function(msg, reply) {
+        reply(null, { c: 3 })
+      }
+    )
 
-        Assert.equal(3, out.c)
+    var out = await seneca.post('a:1,b:2')
+    Assert.equal(3, out.c)
 
-        this.act('a:1', function(err) {
-          Assert.equal('act_invalid_msg', err.code)
-          fin()
-        })
-      })
+    try {
+      await seneca.post('a:1')
+      Assert.fail()
+    } catch (err) {
+      Assert.equal('act_invalid_msg', err.code)
+    }
   })
 
-  it('edge', function(fin) {
-    Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
-      .use('../joi')
-      .add(
-        {
-          a: 1,
-          joi$: 1
-        },
-        function(msg, reply) {
-          reply(null, { c: 3 })
-        }
-      )
-      .act('a:1,b:2', function(err, out) {
-        if (err) return fin(err)
+  it('edge', async () => {
+    const seneca = await make_seneca().add(
+      {
+        a: 1,
+        joi$: 1
+      },
+      function(msg, reply) {
+        reply(null, { c: 3 })
+      }
+    )
 
-        Assert.equal(3, out.c)
-        fin()
-      })
+    var out = await seneca.post('a:1,b:2')
+    Assert.equal(3, out.c)
   })
 
-  it('defensives', function(fin) {
+  it('defensives', async () => {
     var pmeta = JoiPlugin.preload({})
     var actmod = pmeta.extend.action_modifier
     var actmeta = {}
     actmod(actmeta)
     Assert.equal(void 0, actmeta.validate)
-    fin()
   })
 
-  it('parambulator-legacy', function(fin) {
-    Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
-      .use('../joi', { legacy: true })
+  it('parambulator-legacy', async () => {
+    var seneca = Seneca({
+      log: 'silent',
+      legacy: { error_codes: false, validate: false }
+    })
+      .use('promisify')
+      .use(JoiPlugin, { legacy: true })
       .add(
         {
           a: 0
@@ -164,66 +169,58 @@ describe('joi', function() {
           reply(null, { c: 3 })
         }
       )
-      .act('a:0', function(err, out) {
-        if (err) return fin(err)
-        Assert.equal(0, out.c)
 
-        this.act('a:1,x:1', function(err, out) {
-          if (err) return fin(err)
-          Assert.equal(1, out.c)
+    var out = await seneca.post('a:0')
+    Assert.equal(0, out.c)
 
-          this.act('a:2,b:1', function(err, out) {
-            if (err) return fin(err)
-            Assert.equal(2, out.c)
+    out = await seneca.post('a:1,x:1')
+    Assert.equal(1, out.c)
 
-            this.act('a:3,b:1', function(err, out) {
-              if (err) return fin(err)
-              Assert.equal(3, out.c)
+    out = await seneca.post('a:2,b:1')
+    Assert.equal(2, out.c)
 
-              legacy_false()
-            })
-          })
-        })
-      })
+    out = await seneca.post('a:3,b:1')
+    Assert.equal(3, out.c)
 
-    function legacy_false() {
-      Seneca({ log: 'silent', legacy: { error_codes: false, validate: false } })
-        .use('../joi', { legacy: false })
-        .add(
-          {
-            a: 0
-          },
-          function(msg, reply) {
-            reply(null, { c: 0 })
-          }
-        )
-        .add(
-          {
-            a: 1,
-            b: { c: 2 }
-          },
-          function(msg, reply) {
-            reply(null, { c: 1 })
-          }
-        )
-        .act('a:0,b:1', function(err, out) {
-          if (err) return fin(err)
-          Assert.equal(0, out.c)
+    seneca = Seneca({
+      log: 'silent',
+      legacy: { error_codes: false, validate: false }
+    })
+      .use('promisify')
+      .use(JoiPlugin, { legacy: false })
+      .add(
+        {
+          a: 0
+        },
+        function(msg, reply) {
+          reply(null, { c: 0 })
+        }
+      )
+      .add(
+        {
+          a: 1,
+          b: { c: 2 }
+        },
+        function(msg, reply) {
+          reply(null, { c: 1 })
+        }
+      )
 
-          this.act('a:1,b:{c:2}', function(err, out) {
-            if (err) return fin(err)
-            Assert.equal(1, out.c)
+    out = await seneca.post('a:0,b:1')
+    Assert.equal(0, out.c)
 
-            this.act('a:1,b:2', function(err) {
-              Assert.equal('act_invalid_msg', err.code)
-              fin()
-            })
-          })
-        })
+    out = await seneca.post('a:1,b:{c:2}')
+    Assert.equal(1, out.c)
+
+    try {
+      await seneca.post('a:1,b:2')
+      Assert.fail()
+    } catch (err) {
+      Assert.equal('act_invalid_msg', err.code)
     }
   })
 
-  it('is_parambulator', function(fin) {
+  it('is_parambulator', async () => {
     Assert.ok(
       JoiPlugin.intern.is_parambulator({
         empty: null,
@@ -242,36 +239,36 @@ describe('joi', function() {
         }
       })
     )
-
-    fin()
   })
 
-  it('parambulator-legacy test default value seneca > 3.x', function(fin) {
+  it('parambulator-legacy test default value seneca > 3.x', async () => {
     var si = Seneca({
       log: 'silent',
       legacy: { error_codes: false, validate: false }
     })
+
     if (si.version < '3.0.0') {
-      return fin()
+      return
     }
 
-    si.use('../joi')
-    si.ready(function() {
-      si.add(
-        {
-          a: 2,
-          b: { d: { string$: true } }
-        },
-        function(msg, reply) {
-          reply(null, { c: 2 })
-        }
-      )
+    si.use(JoiPlugin).use('promisify')
+    await si.ready()
 
-      si.act('a:2,b:1', function(err) {
-        Assert.equal('act_invalid_msg', err.code)
+    si.add(
+      {
+        a: 2,
+        b: { d: { string$: true } }
+      },
+      function(msg, reply) {
+        reply(null, { c: 2 })
+      }
+    )
 
-        fin()
-      })
-    })
+    try {
+      await si.post('a:2,b:1')
+      Assert.fail()
+    } catch (err) {
+      Assert.equal('act_invalid_msg', err.code)
+    }
   })
 })
