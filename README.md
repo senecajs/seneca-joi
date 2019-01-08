@@ -8,6 +8,7 @@
 [![Dependency Status][david-badge]][david-url]
 [![Build Status][travis-badge]][travis-url]
 [![Maintainability](https://api.codeclimate.com/v1/badges/1c51502c58c942a9c583/maintainability)](https://codeclimate.com/github/senecajs/seneca-joi/maintainability)
+[![Coverage Status](https://coveralls.io/repos/github/senecajs/seneca-joi/badge.svg?branch=master)](https://coveralls.io/github/senecajs/seneca-joi?branch=master)
 [![Gitter][gitter-badge]][gitter-url]
 
 
