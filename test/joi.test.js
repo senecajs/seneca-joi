@@ -18,7 +18,7 @@ describe('joi', function() {
   function make_seneca() {
     return Seneca({
       log: 'silent',
-      legacy: { error_codes: false, validate: false }
+      legacy: { error_codes: false, validate: false, transport: false }
     })
       .use('promisify')
       .use(JoiPlugin)
@@ -42,6 +42,52 @@ describe('joi', function() {
     }
   })
 
+  it('action-validate-callback-style', async () => {
+    a1.validate = {
+      b: Joi.required()
+    }
+
+    function a1(msg, reply) {
+      reply({ c: 3 })
+    }
+
+    const seneca = await make_seneca()
+    seneca.add({ a: 1 }, a1)
+
+    var out = await seneca.post('a:1,b:2')
+    Assert.equal(3, out.c)
+
+    try {
+      await seneca.post('a:1')
+      Assert.fail()
+    } catch (err) {
+      Assert.equal('act_invalid_msg', err.code)
+    }
+  })
+
+  it('action-validate-callback-style-nice-order', async () => {
+    const seneca = await make_seneca()
+    seneca.add({ a: 1 }, a1)
+
+    a1.validate = {
+      b: Joi.required()
+    }
+
+    function a1(msg, reply) {
+      reply({ c: 3 })
+    }
+
+    var out = await seneca.post('a:1,b:2')
+    Assert.equal(3, out.c)
+
+    try {
+      await seneca.post('a:1')
+      Assert.fail()
+    } catch (err) {
+      Assert.equal('act_invalid_msg', err.code)
+    }
+  })
+
   it('action-validate', async () => {
     a1.validate = {
       b: Joi.required()
@@ -53,6 +99,31 @@ describe('joi', function() {
 
     const seneca = await make_seneca()
     seneca.message({ a: 1 }, a1)
+
+    var out = await seneca.post('a:1,b:2')
+    Assert.equal(3, out.c)
+
+    try {
+      await seneca.post('a:1')
+      Assert.fail()
+    } catch (err) {
+      Assert.equal('act_invalid_msg', err.code)
+    }
+  })
+
+  it('action-validate-nice-order', async () => {
+    const seneca = await make_seneca()
+    seneca.message({ a: 1 }, a1)
+
+    a1.validate = {
+      b: Joi.required()
+    }
+
+    async function a1(msg) {
+      return { c: 3 }
+    }
+
+    await seneca.ready()
 
     var out = await seneca.post('a:1,b:2')
     Assert.equal(3, out.c)
@@ -252,7 +323,6 @@ describe('joi', function() {
     }
 
     si.use(JoiPlugin).use('promisify')
-    await si.ready()
 
     si.add(
       {
@@ -263,6 +333,8 @@ describe('joi', function() {
         reply(null, { c: 2 })
       }
     )
+
+    await si.ready()
 
     try {
       await si.post('a:2,b:1')
