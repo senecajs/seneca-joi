@@ -9,7 +9,7 @@ var lab = (exports.lab = Lab.script())
 var describe = lab.describe
 var it = lab.it
 
-var Joi = require('joi')
+var Joi = require('@hapi/joi')
 var JoiPlugin = require('..')
 
 describe('joi', function() {

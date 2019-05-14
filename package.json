@@ -28,8 +28,7 @@
     "joi"
   ],
   "dependencies": {
-    "@hapi/joi": "^15.0.3",
-    "joi": "14"
+    "@hapi/joi": "^15.0.3"
   },
   "devDependencies": {
     "coveralls": "^3.0.3",
