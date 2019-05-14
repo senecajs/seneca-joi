@@ -1,7 +1,7 @@
-/* Copyright (c) 2016-2018 Richard Rodger and other contributors, MIT License */
+/* Copyright (c) 2016-2019 Richard Rodger and other contributors, MIT License */
 'use strict'
 
-var Joi = require('joi')
+var Joi = require('@hapi/joi')
 
 module.exports = joi
 
