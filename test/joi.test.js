@@ -24,7 +24,6 @@ describe('joi', function() {
       .use(JoiPlugin)
   }
 
-  /*
   it('happy', async () => {
     const seneca = await make_seneca()
 
@@ -42,7 +41,6 @@ describe('joi', function() {
       Assert.equal('act_invalid_msg', err.code)
     }
   })
-  */
 
   it('action-validate-callback-style', async () => {
     a1.validate = {
