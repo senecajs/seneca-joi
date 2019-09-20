@@ -60,7 +60,7 @@ var intern = (module.exports.intern = {
         rules[p] &&
         !rules[p].isJoi &&
         (/\$$/.exec(p) ||
-          !!/\$$/.exec('' + rules[p]) ||
+          !!/\$$/.exec(String(rules[p])) ||
           intern.is_parambulator(rules[p], ++depth))
       ) {
         return true
