@@ -27,16 +27,18 @@ joi.preload = function joi_preload(plugin) {
           (actdef.rules && Object.keys(actdef.rules).length) ||
           'function' === typeof joi_mod
         ) {
+
           var schema = Joi.object()
-            .keys(actdef.rules)
-            .unknown()
+              .keys(actdef.rules)
+              .unknown()
 
           if (joi_mod) {
             schema = joi_mod(schema, actdef)
           }
 
           actdef.validate = function joi_validate(msg, done) {
-            Joi.validate(msg, schema, options.joi, done)
+            var res = schema.validate(msg, options.joi)
+            done(res.error)
           }
         }
 

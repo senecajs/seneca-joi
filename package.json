@@ -28,14 +28,14 @@
     "joi"
   ],
   "dependencies": {
-    "@hapi/joi": "^15.1.0"
+    "@hapi/joi": "^16.1.2"
   },
   "devDependencies": {
-    "@hapi/lab": "^19.1.0",
-    "coveralls": "^3.0.5",
+    "@hapi/lab": "^20.2.2",
+    "coveralls": "^3.0.6",
     "prettier": "^1.18.2",
     "seneca": "plugin",
-    "seneca-promisify": "^0.8.0"
+    "seneca-promisify": "^1.1.0"
   },
   "files": [
     "README.md",
