@@ -31,10 +31,10 @@
     "@hapi/joi": "^15.1.1"
   },
   "devDependencies": {
-    "@hapi/lab": "^20.2.2",
+    "@hapi/lab": "^20.3.2",
     "coveralls": "^3.0.6",
     "prettier": "^1.18.2",
-    "seneca": "plugin",
+    "seneca": "^3.16.1",
     "seneca-promisify": "^1.1.0"
   },
   "files": [
