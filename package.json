@@ -1,6 +1,6 @@
 {
   "name": "seneca-joi",
-  "version": "5.2.0",
+  "version": "6.0.0",
   "description": "Seneca plugin that provides joi message validation.",
   "main": "joi.js",
   "license": "MIT",
@@ -13,6 +13,7 @@
     "prettier": "prettier --write --no-semi --single-quote *.js lib/*.js test/*.js",
     "coveralls": "lab -s -P test -r lcov | coveralls",
     "clean": "rm -rf node_modules yarn.lock package-lock.json",
+    "reset": "npm run clean && npm i && npm test",
     "repo-tag": "REPO_VERSION=`node -e \"console.log(require('./package').version)\"` && echo TAG: v$REPO_VERSION && git commit -a -m v$REPO_VERSION && git push && git tag v$REPO_VERSION && git push --tags;",
     "repo-publish": "npm run prettier && npm test && npm run repo-tag && npm publish --registry http://registry.npmjs.org"
   },
@@ -31,10 +32,10 @@
     "@hapi/joi": "^15.1.1"
   },
   "devDependencies": {
-    "@hapi/lab": "^20.3.2",
-    "coveralls": "^3.0.6",
-    "prettier": "^1.18.2",
-    "seneca": "^3.16.1",
+    "@hapi/lab": "^21.0.0",
+    "coveralls": "^3.0.9",
+    "prettier": "^1.19.1",
+    "seneca": "^3.17.0",
     "seneca-promisify": "^1.1.0"
   },
   "files": [
