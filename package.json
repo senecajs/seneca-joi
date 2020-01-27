@@ -29,13 +29,13 @@
     "joi"
   ],
   "dependencies": {
-    "@hapi/joi": "^15.1.1"
+    "@hapi/joi": "^17.1.0"
   },
   "devDependencies": {
-    "@hapi/lab": "^21.0.0",
+    "@hapi/lab": "^22.0.3",
     "coveralls": "^3.0.9",
     "prettier": "^1.19.1",
-    "seneca": "^3.17.0",
+    "seneca": "^3.18.0",
     "seneca-promisify": "^1.1.0"
   },
   "files": [
