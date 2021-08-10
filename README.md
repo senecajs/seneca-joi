@@ -11,6 +11,8 @@
 [![Coverage Status](https://coveralls.io/repos/github/senecajs/seneca-joi/badge.svg?branch=master)](https://coveralls.io/github/senecajs/seneca-joi?branch=master)
 [![Gitter][gitter-badge]][gitter-url]
 
+| ![Voxgig](https://www.voxgig.com/res/img/vgt01r.png) | This open source module is sponsored and supported by [Voxgig](https://www.voxgig.com). |
+|---|---|
 
 ## Installation
 ```sh
