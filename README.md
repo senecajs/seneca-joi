@@ -1,18 +1,13 @@
 ![Seneca](http://senecajs.org/files/assets/seneca-logo.png)
+> A [Seneca.js][] plugin
 
-> A [Seneca.js][] plugin that validates messages using the
-> [joi](github.com/rjrodger/joi) module.
+# @seneca/joi
 
-# seneca-joi
-[![npm version][npm-badge]][npm-url]
-[![Dependency Status][david-badge]][david-url]
-[![Build Status][travis-badge]][travis-url]
-[![Maintainability](https://api.codeclimate.com/v1/badges/1c51502c58c942a9c583/maintainability)](https://codeclimate.com/github/senecajs/seneca-joi/maintainability)
-[![Coverage Status](https://coveralls.io/repos/github/senecajs/seneca-joi/badge.svg?branch=master)](https://coveralls.io/github/senecajs/seneca-joi?branch=master)
-[![Gitter][gitter-badge]][gitter-url]
+| ![Voxgig](https://www.voxgig.com/res/img/vgt01r.png) | This open source module is sponsored and supported by [Voxgig](https://www.voxgig.com). |
+|---|---|
 
+## Install
 
-## Installation
 ```sh
 npm install seneca-joi
 ```
@@ -28,7 +23,29 @@ require('seneca')({
 })
 ```
 
-## Usage
+## Quick Example
+
+```js
+require('seneca')()
+  .use('seneca-joi')
+```
+
+## More Examples
+
+See [test/](test/) for usage examples.
+
+## Motivation
+
+Provides Joi validation for Seneca action patterns.
+
+## Support
+
+If you're using this module and need help, you can:
+
+- Post a [github issue][]
+- Tweet to [@senecajs][]
+
+## API
 
 You can validate action messages by providing
 [joi](https://github.com/hapijs/joi) rules as part of the
@@ -78,14 +95,25 @@ require('seneca')
 
 ## Contributing
 
-The [Senecajs org][] encourages open participation. If you feel you
-can help in any way, be it with documentation, examples, extra
-testing, or new features please get in touch.
+The [Senecajs org][] encourages open participation. If you feel you can help in any way, be it with documentation, examples, extra testing, or new features please get in touch.
 
+### Running tests
 
-## License
-Licensed under [MIT][].
+```sh
+npm run test
+```
 
+## Background
+
+Uses [Joi](https://github.com/hapijs/joi) for schema validation.
+
+[![npm version][npm-badge]][npm-url]
+[![Dependency Status][david-badge]][david-url]
+[![Build Status][travis-badge]][travis-url]
+[![Maintainability](https://api.codeclimate.com/v1/badges/1c51502c58c942a9c583/maintainability)](https://codeclimate.com/github/senecajs/seneca-joi/maintainability)
+[![Coverage Status](https://coveralls.io/repos/github/senecajs/seneca-joi/badge.svg?branch=master)](https://coveralls.io/github/senecajs/seneca-joi?branch=master)
+[![Gitter][gitter-badge]][gitter-url]
+[joi](https://github.com/hapijs/joi) rules as part of the
 [MIT]: ./LICENSE
 [npm-badge]: https://badge.fury.io/js/seneca-joi.svg
 [npm-url]: https://badge.fury.io/js/seneca-joi
