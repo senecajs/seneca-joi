@@ -1,9 +1,13 @@
-/* Copyright (c) 2016-2019 Richard Rodger and other contributors, MIT License */
+/* Copyright (c) 2016-2026 Richard Rodger and other contributors, MIT License */
 'use strict'
 
 var Joi = require('@hapi/joi')
 
 module.exports = joi
+
+// The Joi copy used to compile rules. Build rules with this copy: Joi
+// refuses to mix schemas created by different Joi versions.
+module.exports.Joi = Joi
 
 function joi() {}
 
@@ -11,22 +15,23 @@ function joi() {}
 joi.preload = function joi_preload(plugin) {
   var options = plugin.options || {}
 
-  // TODO: remove in seneca 4
+  // When true, parambulator style rules (property names ending in $) are
+  // left unvalidated instead of being compiled as Joi rules.
   var legacy = null == options.legacy ? false : !!options.legacy
 
   return {
     extend: {
       action_modifier: function joi_modifier(actdef) {
         if (legacy && intern.is_parambulator(actdef.rules)) {
+          // Seneca 3.38 and 4 would otherwise validate them as Gubu shapes.
+          delete actdef.gubu
           return actdef
         }
 
         var joi_mod = (actdef.raw && actdef.raw.joi$) || void 0
+        joi_mod = 'function' === typeof joi_mod ? joi_mod : void 0
 
-        if (
-          (actdef.rules && Object.keys(actdef.rules).length) ||
-          'function' === typeof joi_mod
-        ) {
+        if ((actdef.rules && Object.keys(actdef.rules).length) || joi_mod) {
           var schema = Joi.object()
             .keys(actdef.rules)
             .unknown()
@@ -34,6 +39,10 @@ joi.preload = function joi_preload(plugin) {
           if (joi_mod) {
             schema = joi_mod(schema, actdef)
           }
+
+          // Joi replaces the Gubu shape that Seneca 3.38 and 4 compile from
+          // the same rules, so that the rules keep their Joi meaning.
+          delete actdef.gubu
 
           actdef.validate = function joi_validate(msg, done) {
             var res = schema.validate(msg, options.joi)

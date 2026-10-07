@@ -1,33 +1,38 @@
-/* Copyright © 2016-2019 Richard Rodger and other contributors, MIT License. */
+/* Copyright © 2016-2026 Richard Rodger and other contributors, MIT License. */
 'use strict'
 
-var Assert = require('assert')
-var Lab = require('@hapi/lab')
-var Seneca = require('seneca')
+const { describe, it } = require('node:test')
+const Assert = require('node:assert')
+const Seneca = require('seneca')
 
-var lab = (exports.lab = Lab.script())
-var describe = lab.describe
-var it = lab.it
+const Joi = require('@hapi/joi')
+const JoiPlugin = require('..')
 
-var Joi = require('@hapi/joi')
-var JoiPlugin = require('..')
-
-describe('joi', function() {
+describe('joi', function () {
   // NOTE: not using seneca.test(fin) as need to verify errors directly
 
-  function make_seneca() {
-    return Seneca({
-      log: 'silent',
-      legacy: { error_codes: false, validate: false, transport: false }
-    })
-      .use('promisify')
-      .use(JoiPlugin)
+  // seneca-promisify provides message/post on Seneca 3; it is a no-op on
+  // Seneca 4, where promises are built in.
+  function make_seneca(t) {
+    const seneca = Seneca({ log: 'silent' }).use('promisify').use(JoiPlugin)
+    t.after(() => close(seneca))
+    return seneca
   }
 
-  it('happy', async () => {
-    const seneca = await make_seneca()
+  // Callback forms: a promise returning ready() can hang on an idle
+  // Seneca 4.0.0-rc5 instance.
+  function ready(seneca) {
+    return new Promise((resolve) => seneca.ready(resolve))
+  }
 
-    seneca.message({ a: 1, b: Joi.required() }, async function(msg) {
+  function close(seneca) {
+    return new Promise((resolve) => seneca.close(resolve))
+  }
+
+  it('happy', async (t) => {
+    const seneca = make_seneca(t)
+
+    seneca.message({ a: 1, b: Joi.required() }, async function (msg) {
       return { c: 3 }
     })
 
@@ -42,16 +47,16 @@ describe('joi', function() {
     }
   })
 
-  it('action-validate-callback-style', async () => {
+  it('action-validate-callback-style', async (t) => {
     a1.validate = {
-      b: Joi.required()
+      b: Joi.required(),
     }
 
     function a1(msg, reply) {
       reply({ c: 3 })
     }
 
-    const seneca = await make_seneca()
+    const seneca = make_seneca(t)
     seneca.add({ a: 1 }, a1)
 
     var out = await seneca.post('a:1,b:2')
@@ -65,12 +70,12 @@ describe('joi', function() {
     }
   })
 
-  it('action-validate-callback-style-nice-order', async () => {
-    const seneca = await make_seneca()
+  it('action-validate-callback-style-nice-order', async (t) => {
+    const seneca = make_seneca(t)
     seneca.add({ a: 1 }, a1)
 
     a1.validate = {
-      b: Joi.required()
+      b: Joi.required(),
     }
 
     function a1(msg, reply) {
@@ -88,16 +93,16 @@ describe('joi', function() {
     }
   })
 
-  it('action-validate', async () => {
+  it('action-validate', async (t) => {
     a1.validate = {
-      b: Joi.required()
+      b: Joi.required(),
     }
 
     async function a1(msg) {
       return { c: 3 }
     }
 
-    const seneca = await make_seneca()
+    const seneca = make_seneca(t)
     seneca.message({ a: 1 }, a1)
 
     var out = await seneca.post('a:1,b:2')
@@ -111,19 +116,19 @@ describe('joi', function() {
     }
   })
 
-  it('action-validate-nice-order', async () => {
-    const seneca = await make_seneca()
+  it('action-validate-nice-order', async (t) => {
+    const seneca = make_seneca(t)
     seneca.message({ a: 1 }, a1)
 
     a1.validate = {
-      b: Joi.required()
+      b: Joi.required(),
     }
 
     async function a1(msg) {
       return { c: 3 }
     }
 
-    await seneca.ready()
+    await ready(seneca)
 
     var out = await seneca.post('a:1,b:2')
     Assert.equal(3, out.c)
@@ -137,29 +142,27 @@ describe('joi', function() {
   })
 
   // Should ignore joi rules if plugin not loaded
-  it('no-joi', async () => {
-    const seneca = Seneca({
-      log: 'silent',
-      legacy: { error_codes: false, validate: false }
-    })
+  it('no-joi', async (t) => {
+    const seneca = Seneca({ log: 'silent' })
       .use('promisify')
-      .add({ a: 1, b: Joi.required() }, function(msg, reply) {
+      .add({ a: 1, b: Joi.required() }, function (msg, reply) {
         reply(null, { c: 3 })
       })
+    t.after(() => close(seneca))
 
     var out = await seneca.post('a:1,b:2')
     Assert.equal(3, out.c)
   })
 
-  it('custom', async () => {
-    const seneca = await make_seneca().add(
+  it('custom', async (t) => {
+    const seneca = make_seneca(t).add(
       {
         a: 1,
-        joi$: function(schema) {
+        joi$: function (schema) {
           return schema.keys({ b: Joi.required() })
-        }
+        },
       },
-      function(msg, reply) {
+      function (msg, reply) {
         reply(null, { c: 3 })
       }
     )
@@ -175,13 +178,13 @@ describe('joi', function() {
     }
   })
 
-  it('edge', async () => {
-    const seneca = await make_seneca().add(
+  it('edge', async (t) => {
+    const seneca = make_seneca(t).add(
       {
         a: 1,
-        joi$: 1
+        joi$: 1,
       },
-      function(msg, reply) {
+      function (msg, reply) {
         reply(null, { c: 3 })
       }
     )
@@ -198,48 +201,46 @@ describe('joi', function() {
     Assert.equal(void 0, actmeta.validate)
   })
 
-  it('parambulator-legacy', async () => {
-    var seneca = Seneca({
-      log: 'silent',
-      legacy: { error_codes: false, validate: false }
-    })
+  it('parambulator-legacy', async (t) => {
+    var seneca = Seneca({ log: 'silent' })
       .use('promisify')
       .use(JoiPlugin, { legacy: true })
       .add(
         {
-          a: 0
+          a: 0,
         },
-        function(msg, reply) {
+        function (msg, reply) {
           reply(null, { c: 0 })
         }
       )
       .add(
         {
           a: 1,
-          b: { required$: true }
+          b: { required$: true },
         },
-        function(msg, reply) {
+        function (msg, reply) {
           reply(null, { c: 1 })
         }
       )
       .add(
         {
           a: 2,
-          b: { d: { string$: true } }
+          b: { d: { string$: true } },
         },
-        function(msg, reply) {
+        function (msg, reply) {
           reply(null, { c: 2 })
         }
       )
       .add(
         {
           a: 3,
-          b: { e: 'required$' }
+          b: { e: 'required$' },
         },
-        function(msg, reply) {
+        function (msg, reply) {
           reply(null, { c: 3 })
         }
       )
+    t.after(() => close(seneca))
 
     var out = await seneca.post('a:0')
     Assert.equal(0, out.c)
@@ -253,38 +254,36 @@ describe('joi', function() {
     out = await seneca.post('a:3,b:1')
     Assert.equal(3, out.c)
 
-    seneca = Seneca({
-      log: 'silent',
-      legacy: { error_codes: false, validate: false }
-    })
+    const seneca2 = Seneca({ log: 'silent' })
       .use('promisify')
       .use(JoiPlugin, { legacy: false })
       .add(
         {
-          a: 0
+          a: 0,
         },
-        function(msg, reply) {
+        function (msg, reply) {
           reply(null, { c: 0 })
         }
       )
       .add(
         {
           a: 1,
-          b: { c: 2 }
+          b: { c: 2 },
         },
-        function(msg, reply) {
+        function (msg, reply) {
           reply(null, { c: 1 })
         }
       )
+    t.after(() => close(seneca2))
 
-    out = await seneca.post('a:0,b:1')
+    out = await seneca2.post('a:0,b:1')
     Assert.equal(0, out.c)
 
-    out = await seneca.post('a:1,b:{c:2}')
+    out = await seneca2.post('a:1,b:{c:2}')
     Assert.equal(1, out.c)
 
     try {
-      await seneca.post('a:1,b:2')
+      await seneca2.post('a:1,b:2')
       Assert.fail()
     } catch (err) {
       Assert.equal('act_invalid_msg', err.code)
@@ -297,7 +296,7 @@ describe('joi', function() {
         empty: null,
         use: {},
         config: { object$: true },
-        plugin: { string$: true }
+        plugin: { string$: true },
       })
     )
 
@@ -305,18 +304,16 @@ describe('joi', function() {
       !JoiPlugin.intern.is_parambulator({
         a: {
           b: {
-            c: { d: { e: { f: { g: { h: { i: { j: { k: { l: 1 } } } } } } } } }
-          }
-        }
+            c: { d: { e: { f: { g: { h: { i: { j: { k: { l: 1 } } } } } } } } },
+          },
+        },
       })
     )
   })
 
-  it('parambulator-legacy test default value seneca > 3.x', async () => {
-    var si = Seneca({
-      log: 'silent',
-      legacy: { error_codes: false, validate: false }
-    })
+  it('parambulator-legacy test default value seneca > 3.x', async (t) => {
+    var si = Seneca({ log: 'silent' })
+    t.after(() => close(si))
 
     if (si.version < '3.0.0') {
       return
@@ -327,14 +324,14 @@ describe('joi', function() {
     si.add(
       {
         a: 2,
-        b: { d: { string$: true } }
+        b: { d: { string$: true } },
       },
-      function(msg, reply) {
+      function (msg, reply) {
         reply(null, { c: 2 })
       }
     )
 
-    await si.ready()
+    await ready(si)
 
     try {
       await si.post('a:2,b:1')
