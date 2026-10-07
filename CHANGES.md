@@ -1,5 +1,8 @@
 ## 20261007: 7.1.0
 
+* The package is published as `@seneca/joi` (versions up to 7.0.2 were
+  `seneca-joi`). The peer dependency range admits Seneca 2 as before,
+  though Seneca 2 is no longer tested.
 * Seneca 4 prerelease support: tested with seneca 4.0.0-rc5 and the
   unreleased 4.0.0, and with seneca 3.38.0, on Node.js 24 and 22.
 * Behaviour change: when the plugin is loaded, Joi validation replaces

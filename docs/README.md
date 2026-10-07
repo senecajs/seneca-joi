@@ -1,4 +1,4 @@
-# seneca-joi documentation
+# @seneca/joi documentation
 
 The documentation follows the [Diátaxis](https://diataxis.fr/) structure:
 tutorials to learn, how-to guides for tasks, reference to look things up,
@@ -51,8 +51,8 @@ line flags.
 | Rules in the action pattern, `add(pattern, rules, action)` | Annotation | [Rules in the pattern](reference/api.md#rules-in-the-pattern) | [Validate messages with Joi rules](how-to/validate-messages-with-joi-rules.md) |
 | `action.validate` property | Annotation | [The validate property](reference/api.md#the-validate-property) | [Validate messages with Joi rules](how-to/validate-messages-with-joi-rules.md) |
 | `joi$` directive | Annotation | [The joi$ directive](reference/api.md#the-joi-directive) | [Customize the schema with joi$](how-to/customize-the-schema-with-joi.md) |
-| `require('seneca-joi').Joi` | Export | [Module exports](reference/api.md#module-exports) | [Validate messages with Joi rules](how-to/validate-messages-with-joi-rules.md) |
-| `require('seneca-joi').intern.is_parambulator` | Export | [intern.is_parambulator](reference/api.md#detecting-parambulator-rules) | [Migrate from parambulator rules](how-to/migrate-from-parambulator.md) |
+| `require('@seneca/joi').Joi` | Export | [Module exports](reference/api.md#module-exports) | [Validate messages with Joi rules](how-to/validate-messages-with-joi-rules.md) |
+| `require('@seneca/joi').intern.is_parambulator` | Export | [intern.is_parambulator](reference/api.md#detecting-parambulator-rules) | [Migrate from parambulator rules](how-to/migrate-from-parambulator.md) |
 | `preload` returning `extend.action_modifier` | Plugin definition | [Plugin definition](reference/api.md#plugin-definition) | [How validation works](explanation/how-validation-works.md) |
 | `actdef.validate`, removal of `actdef.gubu` | Action definition change | [Plugin definition](reference/api.md#plugin-definition) | [How validation works](explanation/how-validation-works.md) |
 | `act_invalid_msg` | Error (Seneca core code) | [Errors](reference/errors.md#rejected-messages) | [Validate messages with Joi rules](how-to/validate-messages-with-joi-rules.md#4-handle-the-error) |

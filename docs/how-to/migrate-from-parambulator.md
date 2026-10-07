@@ -54,7 +54,7 @@ Common parambulator rules and their Joi equivalents:
 | `{ min$: 1, max$: 9 }` | `Joi.number().min(1).max(9)` |
 | `{ d: { string$: true } }` | `Joi.object({ d: Joi.string() })` |
 
-Build the Joi rules with `require('seneca-joi').Joi` (see
+Build the Joi rules with `require('@seneca/joi').Joi` (see
 [Validate messages with Joi rules](validate-messages-with-joi-rules.md)).
 
 ## 3. Remove `legacy: true`
@@ -63,7 +63,7 @@ When no `$` rules remain, drop the option. To find leftovers in a test
 or a script, the detection function is exported:
 
 ```js
-const { is_parambulator } = require('seneca-joi').intern
+const { is_parambulator } = require('@seneca/joi').intern
 
 is_parambulator({ b: { required$: true } }) // true
 is_parambulator({ b: Joi.string() }) // false

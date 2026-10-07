@@ -11,7 +11,7 @@ messages.
 | | seneca-joi | Seneca 4 built in (Gubu) |
 | --- | ---------- | ------------------------ |
 | Where rules live | Pattern, rules argument, or the action's `validate` property | Pattern or rules argument. Seneca 4.0.0-rc5 and 4.0.0 do not build a shape from the `validate` property. |
-| Rule values | Joi schemas built with `require('seneca-joi').Joi`, plain objects | Type constructors, builders from `seneca.valid`, plain values |
+| Rule values | Joi schemas built with `require('@seneca/joi').Joi`, plain objects | Type constructors, builders from `seneca.valid`, plain values |
 | Required string | `Joi.string().required()` | `String` or `Required(String)` |
 | Optional string | `Joi.string()` | `Skip(String)` |
 | Default value | `Joi.number().default(1)`, not written into the message | `Default(1)` or just `1`, written into the message |

@@ -9,7 +9,7 @@ received over a transport.
 
 ```js
 const Seneca = require('seneca')
-const SenecaJoi = require('seneca-joi')
+const SenecaJoi = require('@seneca/joi')
 const Joi = SenecaJoi.Joi
 
 const seneca = Seneca().use(SenecaJoi)

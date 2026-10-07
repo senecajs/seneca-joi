@@ -10,7 +10,8 @@ schemas. Put Joi rules into the action pattern, or into the action
 function's `validate` property, and messages that do not match are
 rejected with an `act_invalid_msg` error before the action runs. Works
 with Seneca 3 (3.38 tested) and the Seneca 4 prerelease (4.0.0-rc5 and
-4.0.0 tested) on Node.js 22 and 24. Published on npm as `seneca-joi`.
+4.0.0 tested) on Node.js 22 and 24. Published on npm as `@seneca/joi`
+(versions up to 7.0.2 were published as `seneca-joi`).
 
 | ![Voxgig](https://www.voxgig.com/res/img/vgt01r.png) | This open source module is sponsored and supported by [Voxgig](https://www.voxgig.com). |
 |---|---|
@@ -18,12 +19,12 @@ with Seneca 3 (3.38 tested) and the Seneca 4 prerelease (4.0.0-rc5 and
 ## Install
 
 ```sh
-npm install seneca-joi
+npm install @seneca/joi
 ```
 
 Seneca is a peer dependency: `seneca@3`, or `seneca@4.0.0-rc5` or later.
 The plugin brings its own copy of `@hapi/joi` 17 and exports it as
-`require('seneca-joi').Joi`; build your rules with that copy, because
+`require('@seneca/joi').Joi`; build your rules with that copy, because
 Joi refuses to mix schemas from different Joi versions. On Seneca 4 you
 can also validate without this plugin, see
 [Migrate to Seneca 4 built in validation](docs/how-to/migrate-to-gubu-validation.md).
@@ -34,7 +35,7 @@ can also validate without this plugin, see
 
 ```js
 const Seneca = require('seneca')
-const SenecaJoi = require('seneca-joi')
+const SenecaJoi = require('@seneca/joi')
 const Joi = SenecaJoi.Joi
 
 const seneca = Seneca({ log: 'silent' }).use(SenecaJoi)
@@ -129,7 +130,7 @@ design and its limits.
 
 Full documentation: [docs/README.md](docs/README.md).
 
-Options (`seneca.use('seneca-joi', options)`), see [Options](docs/reference/options.md):
+Options (`seneca.use('@seneca/joi', options)`), see [Options](docs/reference/options.md):
 
 | Option | Default | Effect |
 | ------ | ------- | ------ |
@@ -148,8 +149,8 @@ Exports:
 
 | Export | Effect |
 | ------ | ------ |
-| `require('seneca-joi').Joi` | The Joi copy to build rules with. |
-| `require('seneca-joi').intern.is_parambulator(rules)` | Detects parambulator style rules. |
+| `require('@seneca/joi').Joi` | The Joi copy to build rules with. |
+| `require('@seneca/joi').intern.is_parambulator(rules)` | Detects parambulator style rules. |
 
 Errors, see [Errors](docs/reference/errors.md): rejected messages fail
 with Seneca's `act_invalid_msg`; `err.details.message` is the Joi
@@ -184,12 +185,13 @@ scope the authoring session did not have; apply it with
 
 ## Background
 
-seneca-joi started in 2016 as the replacement for parambulator based
+@seneca/joi (published as `seneca-joi` up to 7.0.2) started in 2016 as
+the replacement for parambulator based
 validation (see the [change log](CHANGES.md)). Version 7 moved to
 `@hapi/joi` 17. Version 7.1 adds Seneca 4 support and makes Joi take
 precedence over the Gubu validation that Seneca 3.38 and 4 build in.
 
-| seneca-joi | Seneca | Node.js | Notes |
+| @seneca/joi | Seneca | Node.js | Notes |
 | ---------- | ------ | ------- | ----- |
 | 7.1.x | 3.38, 4.0.0-rc5, 4.0.0 | 22, 24 | Joi rules replace the core Gubu shape. |
 | 7.0.x | 3.x before Gubu message validation | 8 to 13 | Broken on 3.38: Joi schemas were compiled as Gubu shapes. |
@@ -197,7 +199,7 @@ precedence over the Gubu validation that Seneca 3.38 and 4 build in.
 The `@hapi/joi` package is deprecated in favour of `joi`, but the two are
 different copies and Joi refuses to mix their schemas. The plugin stays
 on `@hapi/joi@17.1.1`, the last release of that package, so that
-existing rules keep working; `require('seneca-joi').Joi` gives you the
+existing rules keep working; `require('@seneca/joi').Joi` gives you the
 right copy.
 
 Licensed under [MIT][].
@@ -207,5 +209,5 @@ Licensed under [MIT][].
 [senecajs.org]: http://senecajs.org/
 [github issue]: https://github.com/senecajs/seneca-joi/issues
 [MIT]: ./LICENSE
-[npm-badge]: https://badge.fury.io/js/seneca-joi.svg
-[npm-url]: https://badge.fury.io/js/seneca-joi
+[npm-badge]: https://badge.fury.io/js/%40seneca%2Fjoi.svg
+[npm-url]: https://www.npmjs.com/package/@seneca/joi

@@ -1,4 +1,4 @@
-/* The same rules with Seneca 4 built in Gubu validation, without seneca-joi. */
+/* The same rules with Seneca 4 built in Gubu validation, without @seneca/joi. */
 const Seneca = require('seneca')
 
 const seneca = Seneca({ log: 'silent' })

@@ -141,9 +141,15 @@ describe('joi', function () {
     }
   })
 
-  // Should ignore joi rules if plugin not loaded
+  // Should ignore joi rules if plugin not loaded. Seneca 3.38 compiles
+  // pattern rules into a Gubu shape unless legacy.rules is true (Seneca 4
+  // does not accept that option, and does not validate a Joi object).
   it('no-joi', async (t) => {
-    const seneca = Seneca({ log: 'silent' })
+    const seneca_version = require('seneca/package.json').version
+    const options = seneca_version.startsWith('3.')
+      ? { log: 'silent', legacy: { rules: true } }
+      : { log: 'silent' }
+    const seneca = Seneca(options)
       .use('promisify')
       .add({ a: 1, b: Joi.required() }, function (msg, reply) {
         reply(null, { c: 3 })

@@ -1,5 +1,5 @@
-/* Getting started with seneca-joi: an action whose input is validated. */
-// In your own project: const SenecaJoi = require('seneca-joi')
+/* Getting started with @seneca/joi: an action whose input is validated. */
+// In your own project: const SenecaJoi = require('@seneca/joi')
 const Seneca = require('seneca')
 const SenecaJoi = require('../..')
 const Joi = SenecaJoi.Joi

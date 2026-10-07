@@ -7,8 +7,8 @@ annotations, and exports two values from the module.
 ## Loading
 
 ```js
-seneca.use('seneca-joi', options)
-seneca.use(require('seneca-joi'), options)
+seneca.use('@seneca/joi', options)
+seneca.use(require('@seneca/joi'), options)
 ```
 
 The plugin's name is `joi` (`seneca.has_plugin('joi')` is true). The
@@ -87,7 +87,7 @@ Guide: [Customize the schema with joi$](../how-to/customize-the-schema-with-joi.
 ## Module exports
 
 ```js
-const SenecaJoi = require('seneca-joi')
+const SenecaJoi = require('@seneca/joi')
 ```
 
 | Export | Description |

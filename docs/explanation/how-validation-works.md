@@ -11,7 +11,7 @@ Seneca matches messages on the scalar properties of a pattern
 the message is data, and every action would have to check it by hand.
 Seneca therefore lets a pattern carry *rules*: properties whose values
 are objects or functions. Rules are removed from the pattern and
-validated before the action runs. seneca-joi makes Joi the engine for
+validated before the action runs. @seneca/joi makes Joi the engine for
 those rules.
 
 ## A preload plugin
@@ -132,7 +132,7 @@ The plugin code is the same for both. What differs around it:
   `convert: false` to reject convertible values, or convert in the
   action.
 * The rules must be built with the plugin's Joi copy
-  (`require('seneca-joi').Joi`). Joi refuses to mix schema copies.
+  (`require('@seneca/joi').Joi`). Joi refuses to mix schema copies.
 * The `joi` option applies to the whole instance; per action settings go
   through `joi$` and `schema.prefs()`.
 * Unknown properties are allowed, because the pattern's own properties

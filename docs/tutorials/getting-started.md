@@ -1,6 +1,6 @@
 # Getting started
 
-In this tutorial you install seneca-joi, write an action whose messages
+In this tutorial you install @seneca/joi, write an action whose messages
 are checked by Joi rules, send one valid and two invalid messages, and
 read the error. It takes about ten minutes. The finished program is
 [docs/examples/getting-started.js](../examples/getting-started.js).
@@ -11,7 +11,7 @@ In a new directory:
 
 ```sh
 npm init -y
-npm install seneca seneca-joi
+npm install seneca @seneca/joi
 ```
 
 `npm install seneca` installs Seneca 3. For the Seneca 4 prerelease use
@@ -24,7 +24,7 @@ Create `price.js`:
 
 ```js
 const Seneca = require('seneca')
-const SenecaJoi = require('seneca-joi')
+const SenecaJoi = require('@seneca/joi')
 const Joi = SenecaJoi.Joi
 
 // Silent log: Seneca otherwise logs an entry for each rejected message.
