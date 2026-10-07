@@ -41,6 +41,7 @@
   "files": [
     "README.md",
     "LICENSE",
-    "joi.js"
+    "joi.js",
+    "docs"
   ]
 }
