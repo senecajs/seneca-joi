@@ -1,0 +1,48 @@
+From e00db59bc9a2f31935ca50759c90497e868029f9 Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Wed, 7 Oct 2026 21:16:25 +0000
+Subject: [PATCH] ci: add the build workflow
+
+GitHub Actions workflow that runs npm test on Node.js 24 and 22
+(ubuntu-latest) for pushes and pull requests on master and main, with
+the npm cache keyed on the tracked package-lock.json.
+
+Co-Authored-By: Claude Fable 5.1 <noreply@anthropic.com>
+Claude-Session: https://claude.ai/code/session_01LaHppcejXbSsAH4BZXNsjV
+---
+ .github/workflows/build.yml | 23 +++++++++++++++++++++++
+ 1 file changed, 23 insertions(+)
+ create mode 100644 .github/workflows/build.yml
+
+diff --git a/.github/workflows/build.yml b/.github/workflows/build.yml
+new file mode 100644
+index 0000000..f0aef2f
+--- /dev/null
++++ b/.github/workflows/build.yml
+@@ -0,0 +1,23 @@
++name: build
++
++on:
++  push:
++    branches: [master, main]
++  pull_request:
++    branches: [master, main]
++
++jobs:
++  test:
++    runs-on: ubuntu-latest
++    strategy:
++      matrix:
++        node-version: [24.x, 22.x]
++    steps:
++      - uses: actions/checkout@v4
++      - uses: actions/setup-node@v4
++        with:
++          node-version: ${{ matrix.node-version }}
++          cache: npm
++      - run: npm install
++      - run: npm run build --if-present
++      - run: npm test
+-- 
+2.43.0
+
