@@ -1,6 +1,6 @@
 {
   "name": "@seneca/joi",
-  "version": "7.0.2",
+  "version": "7.1.0",
   "description": "Seneca plugin that provides joi message validation.",
   "main": "joi.js",
   "license": "MIT",
@@ -9,9 +9,8 @@
     "Richard Rodger (http://richardrodger.com)"
   ],
   "scripts": {
-    "test": "lab -P test -t 90",
-    "prettier": "prettier --write --no-semi --single-quote *.js lib/*.js test/*.js",
-    "coveralls": "lab -s -P test -r lcov | coveralls",
+    "test": "node --test \"test/*.test.js\"",
+    "prettier": "prettier --write --no-semi --single-quote *.js test/*.js docs/examples/*.js",
     "clean": "rm -rf node_modules yarn.lock package-lock.json",
     "reset": "npm run clean && npm i && npm test",
     "repo-tag": "REPO_VERSION=`node -e \"console.log(require('./package').version)\"` && echo TAG: v$REPO_VERSION && git commit -a -m v$REPO_VERSION && git push && git tag v$REPO_VERSION && git push --tags;",
@@ -31,16 +30,18 @@
   "dependencies": {
     "@hapi/joi": "^17.1.1"
   },
+  "peerDependencies": {
+    "seneca": ">=2 || >=4.0.0-rc5"
+  },
   "devDependencies": {
-    "@hapi/lab": "^22.0.4",
-    "coveralls": "^3.1.0",
     "prettier": "^2.0.5",
-    "seneca": "^3.20.5",
-    "seneca-promisify": "^1.3.0"
+    "seneca": "^4.0.0-rc5",
+    "seneca-promisify": "^3.7.2"
   },
   "files": [
     "README.md",
     "LICENSE",
-    "joi.js"
+    "joi.js",
+    "docs"
   ]
 }
