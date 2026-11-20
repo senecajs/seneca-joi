@@ -93,8 +93,11 @@ quantity too small -> "quantity" must be larger than or equal to 1
 ```
 
 Pattern properties with scalar values (`role`, `cmd`) match messages;
-properties with object values are rules. Properties not named in the
-rules are allowed.
+properties with object values are rules. The plugin validates the rules
+that are Joi schemas and leaves the others (`seneca.valid` shape
+builders, `String`, plain values) to Seneca's own validation, so Joi
+and shape rules can share a pattern. Properties not named in the rules
+are allowed.
 
 ## More Examples
 
@@ -143,8 +146,8 @@ Annotations, see [Annotations and exports](docs/reference/api.md):
 
 | Annotation | Effect |
 | ---------- | ------ |
-| Object valued pattern properties | Joi rules, compiled into `Joi.object().keys(rules).unknown()`. |
-| `action.validate = { ... }` | Rules on the action function, merged with the pattern rules. |
+| Joi schemas as pattern property values | Joi rules, compiled into `Joi.object().keys(joiRules).unknown()`. Other object valued properties stay Seneca shape rules. |
+| `action.validate = { ... }` | Joi rules on the action function, merged with the pattern rules. |
 | `joi$: (schema, actdef) => schema` | Full control of the compiled schema. |
 
 Exports:
@@ -156,7 +159,10 @@ Exports:
 
 Errors, see [Errors](docs/reference/errors.md): rejected messages fail
 with Seneca's `act_invalid_msg`; `err.details.message` is the Joi
-message and `err.details.error` the Joi `ValidationError`.
+message and `err.details.error` the Joi `ValidationError`. Rules the
+plugin cannot use (a property mixing Joi and shape builders, another
+Joi copy, a failing `joi$`) never throw: the action rejects every
+message, with `err.details.error.code` `joi_invalid_rules`.
 
 ## Contributing
 
@@ -182,12 +188,12 @@ The repository commits no `package-lock.json`.
 the replacement for parambulator based
 validation (see the [change log](CHANGES.md)). Version 7 moved to
 `@hapi/joi` 17. Version 8 is the first release as `@seneca/joi`: it
-supports Seneca 4 only, and Joi takes precedence over the shape
-validation that Seneca 4 builds in.
+supports Seneca 4 only, validates the Joi rules of an action, and
+leaves its other rules to the shape validation that Seneca 4 builds in.
 
 | Package | Seneca | Node.js | Notes |
 | ------- | ------ | ------- | ----- |
-| `@seneca/joi` 8.x | 4 | 24 or later | Joi rules replace the shape that Seneca compiles from them. |
+| `@seneca/joi` 8.x | 4 | 24 or later | Joi validates Joi rules; other rules stay with Seneca's shape. |
 | `seneca-joi` 7.0.x | 3.x before Gubu message validation | 8 to 13 | Broken on 3.38: Joi schemas were compiled as Gubu shapes. |
 
 The `@hapi/joi` package is deprecated in favour of `joi`, but the two are

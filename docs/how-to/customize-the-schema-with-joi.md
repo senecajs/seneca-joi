@@ -11,7 +11,7 @@ seneca.add(
   {
     role: 'shop',
     cmd: 'find',
-    // schema is Joi.object().keys(rules).unknown(); actdef is the action definition
+    // schema is Joi.object().keys(joiRules).unknown(); actdef is the action definition
     joi$: function (schema, actdef) {
       return schema
         .keys({ id: Joi.string(), name: Joi.string() })
@@ -28,8 +28,8 @@ seneca.add(
 `joi$` is a directive: like every pattern property ending in `$` it is
 neither a pattern value nor a rule. The function receives:
 
-* `schema`: `Joi.object().keys(rules).unknown()` compiled from the
-  action's rules (with no keys when the action has no rules), and
+* `schema`: `Joi.object().keys(joiRules).unknown()` compiled from the
+  action's Joi rules (with no keys when the action has none), and
 * `actdef`: the action definition, with `pattern`, `rules`, `raw` and
   `plugin`.
 
@@ -60,7 +60,8 @@ the options.
 The compiled schema allows unknown properties because the pattern's own
 matching properties (`role`, `cmd`) are not rules. `schema.unknown(false)`
 alone would reject every message. List the pattern properties as keys
-first:
+first, and also the properties of any rules that are not Joi rules,
+which Seneca's shape validates and Joi does not know:
 
 ```js
 seneca.add(

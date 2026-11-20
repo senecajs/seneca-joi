@@ -18,18 +18,39 @@ published; its changes are part of this release.
   function the plugin installed was never called. The shape reads a Joi
   schema as an instance check: valid messages were rejected with
   `act_invalid_msg` (`property "b" is not of type instance`), and a
-  missing property was filled in with the Joi schema object. The plugin
-  now deletes `actdef.shape` when it installs `actdef.validate`.
-* Behaviour change: with the plugin loaded, Joi validation replaces the
-  shape that Seneca 4 compiles from the same rules. Plain object rules
-  such as `{ b: { c: 2 } }` have their Joi meaning (`b.c` must equal 2)
-  instead of the shape meaning (an object whose `c` defaults to 2), and
-  the message reaches the action without shape defaults.
+  missing property was filled in with the Joi schema object. For an
+  action with Joi rules the plugin now replaces `actdef.shape` with its
+  own `actdef.validate`.
+* Behaviour change: the plugin validates only the rules that are Joi
+  schemas (or plain objects and arrays that contain one) and leaves
+  every other rule to Seneca's shape, as if the plugin were not loaded:
+  `seneca.valid` shape builders, type constructors such as `String`,
+  and plain values. A plain object rule such as `{ b: { c: 2 } }` now
+  has the shape meaning (an object whose `c` is a number, 2 by default),
+  not the Joi meaning (`c` must equal 2); write
+  `Joi.object({ c: Joi.valid(2) })` for that. An action without Joi
+  rules is not changed at all, so the plugin can share an instance with
+  plugins whose rules are shape builders, such as @seneca/doc 9.
+* A pattern can mix Joi and shape rules, one kind for each property:
+  Seneca's shape validates the other pattern rules first (its defaults
+  are written into the message), then Joi validates the Joi rules. Shape
+  builders and plain values in the action function's `validate`
+  property stay unvalidated, as without the plugin.
+* Rules the plugin cannot use no longer throw from the action modifier,
+  where the exception was uncaught and stopped the process: a property
+  that mixes Joi schemas and shape builders (Joi threw `Invalid schema
+  content: symbol`), a schema from another Joi copy, or a `joi$`
+  function that throws or returns something other than a Joi schema.
+  The modifier logs an error and the action rejects every message with
+  `act_invalid_msg`, whose `details.error.code` is the new plugin code
+  `joi_invalid_rules`.
 * Behaviour change: with `legacy: true`, parambulator style rules
   (`{ required$: true }`) are no longer validated by Seneca's shape
   either; the action accepts every message, as the option intends. The
   option stays: without it, Seneca 4 reads `{ string$: true }` as an
-  object shape and rejects ordinary values.
+  object shape and rejects ordinary values. Shape builders and Joi
+  schemas are no longer taken for parambulator rules (a shape node has
+  a `$` property).
 * Without the plugin, Seneca 4 does not apply Joi rules: a Joi schema in
   a pattern is an instance check for the shape. The `no-joi` test now
   asserts this.

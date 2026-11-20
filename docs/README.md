@@ -29,8 +29,8 @@ each one runs with `node docs/examples/<name>.js` from a checkout.
 | Reference | Describes |
 | --------- | --------- |
 | [Options](reference/options.md) | `joi` and `legacy`. |
-| [Annotations and exports](reference/api.md) | Rules in patterns, the `validate` property, the `joi$` directive, module exports, the plugin definition. |
-| [Errors](reference/errors.md) | The `act_invalid_msg` error, and compile time failures. |
+| [Annotations and exports](reference/api.md) | Which rules the plugin validates and which it leaves to Seneca, the `validate` property, the `joi$` directive, module exports, the plugin definition. |
+| [Errors](reference/errors.md) | The `act_invalid_msg` error, and `joi_invalid_rules` for rules the plugin cannot use. |
 
 ## Explanation
 
@@ -54,9 +54,9 @@ line flags.
 | `require('@seneca/joi').Joi` | Export | [Module exports](reference/api.md#module-exports) | [Validate messages with Joi rules](how-to/validate-messages-with-joi-rules.md) |
 | `require('@seneca/joi').intern.is_parambulator` | Export | [intern.is_parambulator](reference/api.md#detecting-parambulator-rules) | [Migrate from parambulator rules](how-to/migrate-from-parambulator.md) |
 | `preload` returning `extend.action_modifier` | Plugin definition | [Plugin definition](reference/api.md#plugin-definition) | [How validation works](explanation/how-validation-works.md) |
-| `actdef.validate`, removal of `actdef.shape` | Action definition change | [Plugin definition](reference/api.md#plugin-definition) | [How validation works](explanation/how-validation-works.md) |
+| `actdef.validate`, removal of `actdef.shape` for actions with Joi rules | Action definition change | [Plugin definition](reference/api.md#plugin-definition) | [How validation works](explanation/how-validation-works.md) |
 | `act_invalid_msg` | Error (Seneca core code) | [Errors](reference/errors.md#rejected-messages) | [Validate messages with Joi rules](how-to/validate-messages-with-joi-rules.md#4-handle-the-error) |
-| Compile time failures (`Invalid schema content`, `Cannot mix different versions of joi schemas`) | Error | [Errors](reference/errors.md#errors-while-compiling-the-rules) | [Validate messages with Joi rules](how-to/validate-messages-with-joi-rules.md#1-load-the-plugin-first) |
+| `joi_invalid_rules` (rules the plugin cannot use: a property mixing Joi and shape, another Joi copy, a failing `joi$`) | Error (plugin code, inside `act_invalid_msg`) | [Errors](reference/errors.md#rules-the-plugin-cannot-use) | [Validate messages with Joi rules](how-to/validate-messages-with-joi-rules.md#1-load-the-plugin-first) |
 
 ## Other documents
 

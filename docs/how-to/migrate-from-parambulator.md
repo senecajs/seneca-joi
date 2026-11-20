@@ -26,11 +26,13 @@ removes the shape that Seneca 4 compiles from them. The shape reads
 and would reject every ordinary value (`property "b" is not of type
 object`). Actions with Joi rules are validated as usual.
 
-Without `legacy: true` (the default) parambulator rules are compiled by
-Joi as plain objects. `{ required$: true }` then means "an object whose
-`required$` property equals `true`": a message with `b: 1` fails with
-`"b" must be of type object`, and a message without `b` passes, the
-opposite of the intent. So convert the rules before removing the option.
+Without `legacy: true` (the default) parambulator rules are not Joi
+rules, so the plugin leaves them to Seneca's shape. `{ required$: true }`
+then means "an object with a `required$` property, `true` by default":
+a message with `b: 1` fails with `property "b" is not of type object`,
+and a message without `b` passes, with `b` filled in as
+`{ required$: true }`, the opposite of the intent. So convert the rules
+before removing the option.
 
 ## 2. Convert the rules
 

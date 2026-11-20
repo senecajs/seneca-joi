@@ -10,7 +10,7 @@ validates itself. Keep @seneca/joi if you need Joi features such as
 | | @seneca/joi | Seneca 4 built in (shape) |
 | --- | ---------- | ------------------------ |
 | Where rules live | Pattern, rules argument, or the action's `validate` property | Pattern or rules argument. Seneca 4 does not build a shape from the `validate` property. |
-| Rule values | Joi schemas built with `require('@seneca/joi').Joi`, plain objects | Type constructors, builders from `seneca.valid`, plain values |
+| Rule values | Joi schemas built with `require('@seneca/joi').Joi`, or plain objects that contain them | Type constructors, builders from `seneca.valid`, plain values |
 | Required string | `Joi.string().required()` | `String` or `Required(String)` |
 | Optional string | `Joi.string()` | `Skip(String)` |
 | Default value | `Joi.number().default(1)`, not written into the message | `Default(1)` or just `1`, written into the message |
@@ -22,9 +22,12 @@ validates itself. Keep @seneca/joi if you need Joi features such as
 | Failure details | `err.details.error` is a Joi `ValidationError`; `err.details.props` is `[]` | `err.details.props` lists `{ path, what, type, value }`; there is no `err.details.error` |
 | Error code | `act_invalid_msg` | `act_invalid_msg` |
 
-## 1. Rewrite the rules first
+## 1. Rewrite the rules, one property at a time
 
-Convert every Joi rule before you remove the plugin. Seneca 4 does not
+Keep the plugin loaded while you convert. It validates only the Joi
+rules and leaves shape builders to Seneca, so a pattern can hold both
+kinds during the migration, one kind for each property. Convert every
+Joi rule before you remove the plugin: Seneca 4 does not
 recognise Joi schemas: without the plugin, it compiles a Joi schema left
 in a pattern into a shape that checks for an instance of the schema's
 class. Every ordinary value then fails (`property "item" is not of type
@@ -59,10 +62,10 @@ action (`this.valid(shape)(this.util.clean(msg))` throws on failure).
 
 ## 2. Remove the plugin
 
-Delete `.use('@seneca/joi')` and the dependency. Seneca 4 then validates
-the pattern rules with shape. While the plugin is loaded it replaces the
-shape of every action that has rules, so shape builders take effect only
-after this step.
+When no Joi rule and no `joi$` function is left, delete
+`.use('@seneca/joi')` and the dependency. Nothing changes for actions
+whose rules are all shape rules: the plugin already left them to
+Seneca.
 
 ## 3. Update error handling
 

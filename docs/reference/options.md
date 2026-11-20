@@ -38,10 +38,12 @@ Any truthy value is treated as `true`. For every action with rules, the
 plugin calls `intern.is_parambulator(actdef.rules)`. When it returns
 true, the plugin leaves the action without a `validate` function and
 removes the shape that Seneca 4 compiled from the rules, so the action
-accepts every message. When it returns false, the rules
-are compiled with Joi as usual.
+accepts every message. When it returns false, the rules are handled as
+usual: Joi validates the Joi rules, Seneca's shape the others. Joi
+schemas and shape builders are never taken for parambulator rules.
 
-When `legacy` is false, parambulator style rules are compiled by Joi as
-plain objects, which rarely means what the rule intended.
+When `legacy` is false, parambulator style rules are not Joi rules, so
+the plugin leaves them to Seneca's shape, which reads them as nested
+object shapes. That rarely means what the rule intended.
 
 Guide: [Migrate from parambulator rules](../how-to/migrate-from-parambulator.md).

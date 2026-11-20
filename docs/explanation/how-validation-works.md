@@ -32,9 +32,17 @@ After every `seneca.add`, Seneca builds the action definition
 (`actdef`) and, on the next tick (`setImmediate`), calls each registered
 action modifier with it. Seneca's own modifier runs first and merges the
 action function's `validate` property into `actdef.rules`. The plugin's
-modifier then compiles `Joi.object().keys(actdef.rules).unknown()`,
-applies the `joi$` function if there is one, and stores a
-`validate(msg, done)` function on the definition.
+modifier then picks the Joi rules, compiles
+`Joi.object().keys(joiRules).unknown()`, applies the `joi$` function if
+there is one, and stores a `validate(msg, done)` function on the
+definition. An action without Joi rules is left alone.
+
+The modifier runs from `setImmediate`, so an exception thrown there
+would be uncaught and stop the process. The modifier therefore never
+throws. Rules it cannot use make the action reject every message with
+a `joi_invalid_rules` error, and the failure is logged at error level.
+This fails closed: an action is never left without the validation its
+author asked for.
 
 Three consequences follow from the timing:
 
@@ -82,28 +90,42 @@ Seneca 4 compiles the rules of a pattern into a
 [shape](https://github.com/rjrodger/shape) when the action is added
 (`actdef.shape`), and step 2 above prefers that shape over the
 `validate` function. Seneca 4 has no Joi support, so the shape gives
-every rule its shape meaning:
+every rule its shape meaning. A Joi schema is an object of a class, so
+the shape checks that the property is an instance of that class. Every
+ordinary value fails (`property "b" is not of type instance`), and a
+message without the property passes, with the Joi schema object filled
+in as its value.
 
-* A Joi schema is an object of a class, so the shape checks that the
-  property is an instance of that class. Every ordinary value fails
-  (`property "b" is not of type instance`), and a message without the
-  property passes, with the Joi schema object filled in as its value.
-* A plain object rule such as `{ b: { c: 2 } }` means an object whose
-  `c` is a number defaulting to 2, not the Joi meaning, an object whose
-  `c` equals 2.
+The plugin divides the work. It validates the rules that are Joi
+schemas, or plain objects and arrays that contain one, and leaves every
+other rule to Seneca: shape builders from `seneca.valid`, type
+constructors such as `String`, and plain values such as `{ c: 2 }`,
+which keep their shape meaning (an object whose `c` is a number, 2 by
+default). So the plugin can share an instance with plugins written for
+Seneca 4, such as @seneca/doc 9, whose rules are shape builders.
 
-The plugin therefore deletes `actdef.shape` when it installs
-`actdef.validate`, and also for parambulator style rules under
-`legacy: true`. With the plugin loaded, every action that has rules is
-validated by Joi, and nothing else. Before 8.0.0 the plugin deleted only
-`actdef.gubu`, which on Seneca 4 is a deprecated alias of the shape, so
-the shape stayed and the Joi rules were never applied.
+* An action without Joi rules (and without `joi$`) is not touched:
+  Seneca validates it with its own shape, as without the plugin.
+* An action with Joi rules gets a new `validate` function and loses
+  `actdef.shape`. The new function first runs a shape built from the
+  pattern rules that are not Joi, the shape Seneca would have built
+  without the Joi rules, so its defaults are written into the message.
+  Then it runs Joi. The first failure rejects the message.
+* One property cannot hold both kinds: `{ c: Joi.string(), d:
+  Default(1) }` can be compiled neither by Joi nor by the shape. Such an
+  action rejects every message with `joi_invalid_rules`.
+
+Before 8.0.0 the plugin deleted only `actdef.gubu`, which on Seneca 4
+is a deprecated alias of the shape, so the shape stayed and the Joi
+rules were never applied.
 
 | Rules | Plugin loaded | Plugin not loaded |
 | ----- | ------------- | ----------------- |
 | Joi schemas | Joi validates. | Shape instance check: valid messages are rejected, a missing property is filled with the schema object. |
-| Plain objects | Joi validates. | Shape validates, with the shape meaning. |
-| Shape builders (`seneca.valid`) or type constructors | Builders fail to compile, and the action keeps Seneca's shape; constructors constrain nothing. Do not mix them with the plugin. | Shape validates. |
+| Plain objects without Joi schemas | Shape validates, with the shape meaning. | The same. |
+| Shape builders (`seneca.valid`) or type constructors | Shape validates. | The same. |
+| Joi schemas and shape rules in one pattern | Shape validates the shape rules, then Joi the Joi rules. | Shape validates; the Joi rules are instance checks. |
+| Joi schemas and shape builders inside one property | Every message is rejected with `joi_invalid_rules`. | Shape validates; the Joi schemas are instance checks. |
 | Parambulator style, `legacy: true` | Not validated. | Shape validates, with the wrong meaning. |
 
 ## Seneca 4
@@ -133,15 +155,20 @@ The plugin needs Seneca 4 (`seneca` `^4.0.0`). Seneca 3 users stay on
   `convert: false` to reject convertible values, or convert in the
   action.
 * The rules must be built with the plugin's Joi copy
-  (`require('@seneca/joi').Joi`). Joi refuses to mix schema copies.
+  (`require('@seneca/joi').Joi`). Joi refuses to mix schema copies, and
+  the action then rejects every message with `joi_invalid_rules`.
 * The `joi` option applies to the whole instance; per action settings go
   through `joi$` and `schema.prefs()`.
 * Unknown properties are allowed, because the pattern's own properties
   are unknown to the schema. Closing the schema means listing them, see
   [Customize the schema with joi$](../how-to/customize-the-schema-with-joi.md).
-* With the plugin loaded, no action in the instance can use Seneca's
-  shape validation for its rules: the plugin replaces the shape of every
-  action that has rules.
+* Rules in the action function's `validate` property are validated
+  only when they are Joi rules. Seneca builds no shape from that
+  property, so shape builders and plain values there are documentation
+  only, with or without the plugin.
+* A schema replaced through `joi$` sees the whole message, but closing
+  it with `unknown(false)` also rejects the properties that the shape
+  rules validate, unless they are listed as keys.
 * Rules travel with the action definition, not with the message. A
   message sent over a transport is validated by the instance that holds
   the action with the rules.

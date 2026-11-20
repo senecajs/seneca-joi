@@ -1,7 +1,9 @@
 # Errors
 
-The plugin defines no error codes of its own. A message that fails its
-rules is rejected by Seneca with the core error `act_invalid_msg`. The
+A message that fails its rules is rejected by Seneca with the core
+error `act_invalid_msg`. The plugin's own code, `joi_invalid_rules`,
+appears inside it when the rules of an action cannot be used, see
+[Rules the plugin cannot use](#rules-the-plugin-cannot-use). The
 error is created by Seneca, not by the action, so it keeps Seneca's
 layout (Seneca 4 passes errors replied by actions unwrapped, which does
 not apply to it).
@@ -19,7 +21,7 @@ rejection of `post`. Verified with Seneca 4.0.0:
 | `details.message` | The Joi error message, for example `"b" is required`. With `abortEarly: false` the messages of all failures joined by `. `. |
 | `details.msg` | The rejected message without directives. |
 | `details.error` | The Joi `ValidationError` (`isJoi` is true). `details.error.details` is Joi's array of failures, each with `message`, `path`, `type` and `context`. |
-| `details.props` | `[]`. Seneca fills it only for failures of its own shape validation. |
+| `details.props` | `[]` for a Joi failure. A failure of a shape rule (a rule that is not Joi, see [Rule values](api.md#rule-values)) has the same layout as without the plugin: `details.props` lists `{ path, what, type, value }` and there is no `details.error`. |
 | `seneca` | `true` |
 | `package` | `'seneca'` |
 | `orig` | `null` |
@@ -49,13 +51,31 @@ any failed action. With the instance option `trace: { invalid: true }`
 the inward pipeline adds a warning entry (`case: 'INVALID'`) as well.
 `log: 'silent'` suppresses both.
 
-## Errors while compiling the rules
+## Rules the plugin cannot use
 
 The rules are compiled on the next tick after `seneca.add`, inside the
-plugin's action modifier. A rule that Joi cannot compile, such as a
-shape builder from `seneca.valid` (`Invalid schema content: symbol`), or
-a `joi$` function that throws, throws from that tick. Nothing catches
-it, so the process gets an uncaught exception. If a handler keeps the
-process alive, the action keeps the shape that Seneca compiled from its
-rules and is validated by that shape, not by Joi. Make sure every rule
-is a Joi schema or a plain value when the plugin is loaded.
+plugin's action modifier. The modifier never throws, because nothing
+would catch an exception from that tick. When it cannot use the rules of
+an action, the action rejects every message, and the modifier logs an
+error entry (`kind: 'plugin', plugin: 'joi', case: 'INVALID_RULES'`,
+with `code`, `pattern` and `reason`). Causes:
+
+* A property that holds both Joi schemas and shape builders, such as
+  `{ c: Joi.string(), d: seneca.valid.Default(1) }`.
+* A Joi schema from another Joi copy (`Cannot mix different versions of
+  joi schemas`).
+* A `joi$` function that throws, or returns something other than a Joi
+  schema.
+
+Each message to such an action fails with `act_invalid_msg`, where:
+
+| Property | Value |
+| -------- | ----- |
+| `details.message` | `@seneca/joi: the rules of action <pattern> cannot be used: <reason>; the action rejects every message until its rules are fixed` |
+| `details.error.code` | `'joi_invalid_rules'` |
+| `details.error.details` | `{ pattern, reason }` |
+| `details.error.cause` | The original exception, when there was one. |
+
+Fix the rules: one kind for each property, every Joi rule built with
+`require('@seneca/joi').Joi`, and a `joi$` function that returns a Joi
+schema.
