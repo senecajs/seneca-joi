@@ -45,7 +45,7 @@ properties themselves (`role`, `cmd`) are such unnamed properties.
 | A plain object, for example `{ c: 2 }` | An optional object schema with exactly those keys; `c` must equal `2`. `{ b: { c: 2 } }` rejects `b: 1` (`"b" must be of type object`) and `b: { c: 3 }` (`"b.c" must be [2]`), and accepts a missing `b`. |
 | An array, for example `[1, 2]` | The allowed values. |
 | A function, for example `String` | Compiles, but constrains nothing. |
-| A Gubu builder such as `Required(String)` | Throws `Invalid schema content: symbol` while compiling, see [Errors](errors.md#errors-while-compiling-the-rules). |
+| A shape builder such as `seneca.valid.Required(String)` | Throws `Invalid schema content: symbol` while compiling, see [Errors](errors.md#errors-while-compiling-the-rules). |
 
 ## The validate property
 
@@ -119,16 +119,18 @@ it, on the next tick after every `seneca.add`, with the new action
 definition. The modifier:
 
 1. With `legacy: true` and parambulator style rules: deletes
-   `actdef.gubu` and returns.
+   `actdef.shape` and returns.
 2. Without rules and without a `joi$` function: returns.
-3. Otherwise compiles the schema, applies `joi$`, deletes `actdef.gubu`
-   (the shape Seneca 3.38 and 4 compiled from the same rules) and sets
+3. Otherwise compiles the schema, applies `joi$`, deletes `actdef.shape`
+   (the shape Seneca 4 compiled from the same rules) and sets
    `actdef.validate = function (msg, done)`, which calls
    `schema.validate(msg, options.joi)` and passes the Joi error, or
    `undefined`, to `done`.
 
 Seneca calls `actdef.validate` from its inward pipeline before the
-action runs, and turns an error into `act_invalid_msg`. Only the error
+action runs, but only when the definition has no `actdef.shape`, which
+is why the modifier deletes it. Seneca turns an error into
+`act_invalid_msg`. Only the error
 is used; the value returned by Joi is discarded.
 
 The plugin has no `defaults`, no `errors`, no exports through

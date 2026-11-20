@@ -2,7 +2,7 @@
 
 This page explains what the plugin does to a Seneca instance, where in
 the life of a message the rules are applied, how Joi and Seneca's own
-Gubu validation relate, and what the design cannot do.
+shape validation relate, and what the design cannot do.
 
 ## The problem
 
@@ -60,7 +60,7 @@ called. It does this:
 
 1. If the instance option `valid.message` is false (or `valid.active`
    is false), skip.
-2. If the action definition has a Gubu shape (`actdef.gubu`), validate
+2. If the action definition has a shape (`actdef.shape`), validate
    with it and replace the message with the shape's output.
 3. Otherwise, if the definition has a `validate` function, call it and
    read the error it passes to `done`, synchronously.
@@ -76,52 +76,53 @@ defaults applied, is discarded.
 `Seneca({ valid: { message: false } })` therefore turns off Joi
 validation too.
 
-## Joi and Gubu
+## Joi and Seneca's shape
 
-Seneca 3.38 and Seneca 4 compile pattern rules into a
-[Gubu](https://github.com/rjrodger/gubu) shape when the action is added,
-and step 2 above prefers that shape over the `validate` function. Seneca
-4 recognises Joi schemas (by their `$_root` property) and builds no
-shape for a pattern that contains one; Seneca 3.38 builds the shape
-regardless. This had two effects on seneca-joi 7.0.2:
+Seneca 4 compiles the rules of a pattern into a
+[shape](https://github.com/rjrodger/shape) when the action is added
+(`actdef.shape`), and step 2 above prefers that shape over the
+`validate` function. Seneca 4 has no Joi support, so the shape gives
+every rule its shape meaning:
 
-* On Seneca 3.38, a Joi schema in a pattern was compiled as a Gubu shape
-  describing the schema object itself. Valid messages were rejected
-  (`the number is not an instance of .`) and a missing property was
-  filled in with the Joi schema object as its default.
-* On both versions, plain object rules such as `{ b: { c: 2 } }` got the
-  Gubu meaning (an object with a number `c` defaulting to 2) instead of
-  the Joi meaning (an object whose `c` equals 2).
+* A Joi schema is an object of a class, so the shape checks that the
+  property is an instance of that class. Every ordinary value fails
+  (`property "b" is not of type instance`), and a message without the
+  property passes, with the Joi schema object filled in as its value.
+* A plain object rule such as `{ b: { c: 2 } }` means an object whose
+  `c` is a number defaulting to 2, not the Joi meaning, an object whose
+  `c` equals 2.
 
-Since 7.1.0 the plugin deletes `actdef.gubu` when it installs
+The plugin therefore deletes `actdef.shape` when it installs
 `actdef.validate`, and also for parambulator style rules under
 `legacy: true`. With the plugin loaded, every action that has rules is
-validated by Joi, and nothing else.
+validated by Joi, and nothing else. Before 8.0.0 the plugin deleted only
+`actdef.gubu`, which on Seneca 4 is a deprecated alias of the shape, so
+the shape stayed and the Joi rules were never applied.
 
 | Rules | Plugin loaded | Plugin not loaded |
 | ----- | ------------- | ----------------- |
-| Joi schemas | Joi validates (Seneca 3.38 and 4). | Seneca 4: not validated. Seneca 3.38: compiled as a Gubu shape, which breaks the action. |
-| Plain objects | Joi validates. | Gubu validates (Seneca 3.38 and 4). |
-| Gubu builders or type constructors | Builders fail to compile; constructors constrain nothing. Do not mix them with the plugin. | Gubu validates. |
-| Parambulator style, `legacy: true` | Not validated. | Gubu validates, with the wrong meaning. |
+| Joi schemas | Joi validates. | Shape instance check: valid messages are rejected, a missing property is filled with the schema object. |
+| Plain objects | Joi validates. | Shape validates, with the shape meaning. |
+| Shape builders (`seneca.valid`) or type constructors | Builders fail to compile, and the action keeps Seneca's shape; constructors constrain nothing. Do not mix them with the plugin. | Shape validates. |
+| Parambulator style, `legacy: true` | Not validated. | Shape validates, with the wrong meaning. |
 
-## Seneca 3 and Seneca 4
+## Seneca 4
 
-The plugin code is the same for both. What differs around it:
+The plugin needs Seneca 4 (`seneca` `^4.0.0`). Seneca 3 users stay on
+`seneca-joi@7`. What to know about the Seneca 4 side:
 
-* Promise style calls (`seneca.post`, `seneca.message`) are built into
-  Seneca 4. On Seneca 3 they need seneca-promisify.
-* Seneca 4 does not build a Gubu shape from Joi schemas, so Joi rules in
-  a pattern are harmless there even without the plugin. Seneca 3.38
-  needs the plugin (or no Joi rules).
-* The `act_invalid_msg` error has the same shape on both, because Seneca
-  creates it itself; Seneca 3.38 adds an empty `details.plugin`.
+* Promise style calls (`seneca.post`, `seneca.message`) and promises
+  from `ready` and `close` are built in; seneca-promisify is not needed.
+* The `act_invalid_msg` error is created by Seneca itself, so it has the
+  same layout for Joi failures as for shape failures, apart from
+  `details.error` and `details.props`, see [Errors](../reference/errors.md).
 * Plugin options come from `seneca.use(plugin, options)` or
-  `Seneca({ plugin: { joi: options } })` on both.
+  `Seneca({ plugin: { joi: options } })`.
+* Load the plugin by its full name, `seneca.use('@seneca/joi')`, or by
+  module. The short name `joi` makes Seneca try `seneca-joi` first,
+  which is the Seneca 3 generation of this plugin when it is installed.
 * The plugin's `legacy` option has nothing to do with Seneca's `legacy`
-  instance option. Seneca 4 validates its instance options strictly,
-  and rejects the old test flags `legacy: { error_codes, validate,
-  transport }`; the plugin's option is unaffected.
+  instance option, which Seneca 4 deprecates.
 
 ## Limits
 
@@ -138,9 +139,9 @@ The plugin code is the same for both. What differs around it:
 * Unknown properties are allowed, because the pattern's own properties
   are unknown to the schema. Closing the schema means listing them, see
   [Customize the schema with joi$](../how-to/customize-the-schema-with-joi.md).
-* With the plugin loaded, no action in the instance can use Gubu
-  validation: the plugin replaces the shape of every action that has
-  rules.
+* With the plugin loaded, no action in the instance can use Seneca's
+  shape validation for its rules: the plugin replaces the shape of every
+  action that has rules.
 * Rules travel with the action definition, not with the message. A
   message sent over a transport is validated by the instance that holds
   the action with the rules.

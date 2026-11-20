@@ -23,8 +23,9 @@ joi.preload = function joi_preload(plugin) {
     extend: {
       action_modifier: function joi_modifier(actdef) {
         if (legacy && intern.is_parambulator(actdef.rules)) {
-          // Seneca 3.38 and 4 would otherwise validate them as Gubu shapes.
-          delete actdef.gubu
+          // Seneca 4 would otherwise validate them as shapes: it reads
+          // { string$: true } as an object with a property string$.
+          delete actdef.shape
           return actdef
         }
 
@@ -40,9 +41,13 @@ joi.preload = function joi_preload(plugin) {
             schema = joi_mod(schema, actdef)
           }
 
-          // Joi replaces the Gubu shape that Seneca 3.38 and 4 compile from
-          // the same rules, so that the rules keep their Joi meaning.
-          delete actdef.gubu
+          // Joi replaces the shape that Seneca 4 compiles from the same
+          // rules when the action is added. Seneca validates with
+          // actdef.shape when there is one, and calls actdef.validate only
+          // when there is none. The shape reads a Joi schema as an
+          // instance check, and plain object rules with their shape
+          // meaning instead of the Joi one.
+          delete actdef.shape
 
           actdef.validate = function joi_validate(msg, done) {
             var res = schema.validate(msg, options.joi)

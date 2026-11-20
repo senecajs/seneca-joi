@@ -11,12 +11,11 @@ In a new directory:
 
 ```sh
 npm init -y
-npm install seneca @seneca/joi
+npm install seneca@^4 @seneca/joi
 ```
 
-`npm install seneca` installs Seneca 3. For the Seneca 4 prerelease use
-`npm install seneca@4.0.0-rc5` (Node.js 22 or later). The program below
-is the same for both.
+The plugin needs Seneca 4 and Node.js 24 or later. Name the major
+version: a plain `npm install seneca` can still install Seneca 3.
 
 ## 2. Write the program
 
@@ -83,7 +82,7 @@ node price.js
 ```
 valid message -> null { item: 'apple', quantity: 3, total: 6 }
 missing item -> act_invalid_msg
-  message: seneca: Action cmd:price,role:shop received an invalid message; "item" is required; message content was: {role:shop,cmd:price,quantity:3}.
+  message: seneca: Action cmd:price,role:shop received an invalid message; "item" is required.
   details: [
   {
     message: '"item" is required',
@@ -136,4 +135,4 @@ string. And the reply was not validated; only messages are.
 * Every property of the error: [Errors](../reference/errors.md).
 * How the plugin hooks into Seneca: [How validation works](../explanation/how-validation-works.md).
 * On Seneca 4, validation without the plugin:
-  [Migrate to Seneca 4 built in validation](../how-to/migrate-to-gubu-validation.md).
+  [Migrate to Seneca 4 built in validation](../how-to/migrate-to-shape-validation.md).

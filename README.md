@@ -8,10 +8,10 @@
 Validates action messages with [Joi](https://github.com/hapijs/joi)
 schemas. Put Joi rules into the action pattern, or into the action
 function's `validate` property, and messages that do not match are
-rejected with an `act_invalid_msg` error before the action runs. Works
-with Seneca 3 (3.38 tested) and the Seneca 4 prerelease (4.0.0-rc5 and
-4.0.0 tested) on Node.js 22 and 24. Published on npm as `@seneca/joi`
-(versions up to 7.0.2 were published as `seneca-joi`).
+rejected with an `act_invalid_msg` error before the action runs.
+Requires Seneca 4 and Node.js 24 or later. Published on npm as
+`@seneca/joi` from 8.0.0; versions up to 7.0.2 were published as
+`seneca-joi`, for Seneca 3.
 
 | ![Voxgig](https://www.voxgig.com/res/img/vgt01r.png) | This open source module is sponsored and supported by [Voxgig](https://www.voxgig.com). |
 |---|---|
@@ -19,15 +19,17 @@ with Seneca 3 (3.38 tested) and the Seneca 4 prerelease (4.0.0-rc5 and
 ## Install
 
 ```sh
-npm install @seneca/joi
+npm install seneca@^4 @seneca/joi
 ```
 
-Seneca is a peer dependency: `seneca@3`, or `seneca@4.0.0-rc5` or later.
+Seneca is a peer dependency: `seneca` `^4.0.0`. Load the plugin with
+`seneca.use('@seneca/joi')` or `seneca.use(require('@seneca/joi'))`.
 The plugin brings its own copy of `@hapi/joi` 17 and exports it as
 `require('@seneca/joi').Joi`; build your rules with that copy, because
-Joi refuses to mix schemas from different Joi versions. On Seneca 4 you
-can also validate without this plugin, see
-[Migrate to Seneca 4 built in validation](docs/how-to/migrate-to-gubu-validation.md).
+Joi refuses to mix schemas from different Joi versions. Seneca 4 can
+also validate messages without this plugin, with its own shape
+builders, see
+[Migrate to Seneca 4 built in validation](docs/how-to/migrate-to-shape-validation.md).
 
 ## Quick Example
 
@@ -78,7 +80,7 @@ Output:
 ```
 valid message -> null { item: 'apple', quantity: 3, total: 6 }
 missing item -> act_invalid_msg
-  message: seneca: Action cmd:price,role:shop received an invalid message; "item" is required; message content was: {role:shop,cmd:price,quantity:3}.
+  message: seneca: Action cmd:price,role:shop received an invalid message; "item" is required.
   details: [
   {
     message: '"item" is required',
@@ -105,7 +107,7 @@ rules are allowed.
 * [Pass Joi options](docs/how-to/pass-joi-options.md): `abortEarly`,
   `convert`, `presence`.
 * [Migrate from parambulator rules](docs/how-to/migrate-from-parambulator.md)
-  and [Migrate to Seneca 4 built in validation](docs/how-to/migrate-to-gubu-validation.md).
+  and [Migrate to Seneca 4 built in validation](docs/how-to/migrate-to-shape-validation.md).
 * Runnable programs: [docs/examples](docs/examples/).
 
 ## Motivation
@@ -164,37 +166,29 @@ new features please get in touch.
 
 ### Running tests
 
-The tests use `node:test` and run against the Seneca 4 prerelease
-declared in `devDependencies`:
+The tests use `node:test` and run against the Seneca 4 version
+declared in `devDependencies`, on Node.js 24 or later:
 
 ```sh
 npm install
 npm test
 ```
 
-Node.js 24 is the primary target and Node.js 22 the secondary; both must
-pass. To test against another Seneca build, install it without saving
-and run the tests again, for example
-`npm install --no-save seneca@3 && npm test`, then `npm install` to
-restore the lockfile versions.
-
-The GitHub Actions workflow is provided as a patch in
-[.patches](.patches/README.md) because pushing workflow files needs a
-scope the authoring session did not have; apply it with
-`git am .patches/*.patch`.
+The repository commits no `package-lock.json`.
 
 ## Background
 
 @seneca/joi (published as `seneca-joi` up to 7.0.2) started in 2016 as
 the replacement for parambulator based
 validation (see the [change log](CHANGES.md)). Version 7 moved to
-`@hapi/joi` 17. Version 7.1 adds Seneca 4 support and makes Joi take
-precedence over the Gubu validation that Seneca 3.38 and 4 build in.
+`@hapi/joi` 17. Version 8 is the first release as `@seneca/joi`: it
+supports Seneca 4 only, and Joi takes precedence over the shape
+validation that Seneca 4 builds in.
 
-| @seneca/joi | Seneca | Node.js | Notes |
-| ---------- | ------ | ------- | ----- |
-| 7.1.x | 3.38, 4.0.0-rc5, 4.0.0 | 22, 24 | Joi rules replace the core Gubu shape. |
-| 7.0.x | 3.x before Gubu message validation | 8 to 13 | Broken on 3.38: Joi schemas were compiled as Gubu shapes. |
+| Package | Seneca | Node.js | Notes |
+| ------- | ------ | ------- | ----- |
+| `@seneca/joi` 8.x | 4 | 24 or later | Joi rules replace the shape that Seneca compiles from them. |
+| `seneca-joi` 7.0.x | 3.x before Gubu message validation | 8 to 13 | Broken on 3.38: Joi schemas were compiled as Gubu shapes. |
 
 The `@hapi/joi` package is deprecated in favour of `joi`, but the two are
 different copies and Joi refuses to mix their schemas. The plugin stays

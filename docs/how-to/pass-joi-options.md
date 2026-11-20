@@ -6,7 +6,7 @@ at once, refuse type conversion, make every rule required, and so on.
 ## 1. Set the `joi` option
 
 ```js
-seneca.use('seneca-joi', {
+seneca.use('@seneca/joi', {
   joi: {
     abortEarly: false,
     convert: false,
@@ -17,7 +17,7 @@ seneca.use('seneca-joi', {
 The same option in the instance options (the plugin's name is `joi`):
 
 ```js
-Seneca({ plugin: { joi: { joi: { abortEarly: false } } } }).use('seneca-joi')
+Seneca({ plugin: { joi: { joi: { abortEarly: false } } } }).use('@seneca/joi')
 ```
 
 The object is passed unchanged as the second argument of

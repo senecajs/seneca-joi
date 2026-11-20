@@ -88,8 +88,8 @@ seneca.act('role:shop,cmd:price,quantity:0', function (err, out) {
 })
 ```
 
-With promises (Seneca 4, or Seneca 3 with seneca-promisify) the promise
-rejects with the same error:
+With promises (`seneca.post`, built into Seneca 4) the promise rejects
+with the same error:
 
 ```js
 try {
@@ -130,7 +130,7 @@ test('price needs an item', async () => {
     code: 'act_invalid_msg',
   })
 
-  await new Promise((resolve) => seneca.close(resolve))
+  await seneca.close()
 })
 ```
 
@@ -146,5 +146,5 @@ test('price needs an item', async () => {
   need `validateAsync`, such as `external`, cannot be used.
 * Once the plugin is loaded, Joi compiles the rules of every action that
   has rules, including plain object rules and rules written for Seneca 4's
-  Gubu validation. See [What Joi makes of rule values](../reference/api.md#what-joi-makes-of-rule-values)
+  shape validation. See [What Joi makes of rule values](../reference/api.md#what-joi-makes-of-rule-values)
   before mixing the two.
