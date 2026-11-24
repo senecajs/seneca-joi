@@ -26,26 +26,40 @@ seneca.add('role:shop,cmd:price', { item: Joi.string().required() }, action)
 
 Seneca treats every pattern property whose value is an object or a
 function, and whose name does not contain `$`, as a rule. Rules are
-removed from the pattern and stored in `actdef.rules`. The plugin
-compiles the rules of an action into
+removed from the pattern and stored in `actdef.rules`. The plugin sorts
+the rules of an action by their value:
 
-```js
-Joi.object().keys(actdef.rules).unknown()
-```
+* **Joi rules**: a Joi schema, or a plain object or array that contains
+  one, such as `{ c: Joi.string() }`. The plugin compiles them into
 
-so properties that are not named in the rules are allowed. The pattern
-properties themselves (`role`, `cmd`) are such unnamed properties.
+  ```js
+  Joi.object().keys(joiRules).unknown()
+  ```
 
-### What Joi makes of rule values
+  so properties that are not named in the Joi rules are allowed. The
+  pattern properties themselves (`role`, `cmd`) are such unnamed
+  properties.
+* **Other rules**: shape builders from `seneca.valid`, type
+  constructors such as `String`, and plain values such as `{ c: 2 }`.
+  The plugin leaves them to Seneca, which validates them with its own
+  shape, exactly as it does without the plugin.
+
+An action without Joi rules and without a `joi$` function is not
+changed at all. An action with Joi rules is validated by both: Seneca's
+shape for the other pattern rules first (its defaults are written into
+the message), then Joi.
+
+### Rule values
 
 | Rule value | Result |
 | ---------- | ------ |
-| A Joi schema built with the plugin's Joi copy | Used as is. |
-| A Joi schema from another Joi copy | Throws `Cannot mix different versions of joi schemas`. |
-| A plain object, for example `{ c: 2 }` | An optional object schema with exactly those keys; `c` must equal `2`. `{ b: { c: 2 } }` rejects `b: 1` (`"b" must be of type object`) and `b: { c: 3 }` (`"b.c" must be [2]`), and accepts a missing `b`. |
-| An array, for example `[1, 2]` | The allowed values. |
-| A function, for example `String` | Compiles, but constrains nothing. |
-| A Gubu builder such as `Required(String)` | Throws `Invalid schema content: symbol` while compiling, see [Errors](errors.md#errors-while-compiling-the-rules). |
+| A Joi schema built with the plugin's Joi copy | Joi rule, used as is. |
+| A plain object or array that contains a Joi schema, for example `{ c: Joi.string() }` | Joi rule, compiled by Joi: an optional object whose `c` is a string. Plain values inside it have their Joi meaning (`{ c: 2 }` inside a Joi rule means `c` must equal 2). |
+| A Joi schema from another Joi copy | Cannot be compiled: the action rejects every message with `joi_invalid_rules`, see [Errors](errors.md#rules-the-plugin-cannot-use). |
+| A shape builder such as `seneca.valid.Required(String)` | Seneca validates it. |
+| A plain object, for example `{ c: 2 }` | Seneca validates it with the shape meaning: an optional object whose `c` is a number, 2 by default. |
+| A function, for example `String` | Seneca validates it: a required string. |
+| A plain object or array that contains both Joi schemas and shape builders | Cannot be split: the action rejects every message with `joi_invalid_rules`. Use one kind for each property. |
 
 ## The validate property
 
@@ -78,8 +92,8 @@ seneca.add(
 | | |
 | --- | --- |
 | Where | A property of the pattern object given to `seneca.add`. Like every `$` property it is a directive, not a pattern value and not a rule. |
-| Arguments | `schema`: the compiled schema `Joi.object().keys(rules).unknown()`, with empty keys when the action has no rules. `actdef`: the action definition (`pattern`, `rules`, `raw`, `plugin` and so on). |
-| Return value | A Joi schema. It replaces the compiled schema and is used as is. |
+| Arguments | `schema`: the compiled schema `Joi.object().keys(joiRules).unknown()`, with empty keys when the action has no Joi rules. `actdef`: the action definition (`pattern`, `rules`, `raw`, `plugin` and so on). |
+| Return value | A Joi schema. It replaces the compiled schema and is used as is. Rules that are not Joi rules are still validated by Seneca's shape. Anything other than a Joi schema, or an exception, makes the action reject every message with `joi_invalid_rules`. |
 | Not a function | Ignored. The rules, if any, are compiled as usual. |
 
 Guide: [Customize the schema with joi$](../how-to/customize-the-schema-with-joi.md).
@@ -119,17 +133,30 @@ it, on the next tick after every `seneca.add`, with the new action
 definition. The modifier:
 
 1. With `legacy: true` and parambulator style rules: deletes
-   `actdef.gubu` and returns.
-2. Without rules and without a `joi$` function: returns.
-3. Otherwise compiles the schema, applies `joi$`, deletes `actdef.gubu`
-   (the shape Seneca 3.38 and 4 compiled from the same rules) and sets
-   `actdef.validate = function (msg, done)`, which calls
-   `schema.validate(msg, options.joi)` and passes the Joi error, or
+   `actdef.shape` and returns.
+2. Without Joi rules and without a `joi$` function: returns. Seneca's
+   own validation is unchanged.
+3. Otherwise compiles the Joi schema from the Joi rules, applies
+   `joi$`, builds a shape from the other pattern rules (the shape
+   Seneca would have built without the Joi rules), deletes
+   `actdef.shape` (the shape Seneca 4 compiled from all the pattern
+   rules, in which a Joi schema is an instance check) and sets
+   `actdef.validate = function (msg, done)`. That function validates
+   the message with the shape of the other rules, then calls
+   `schema.validate(msg, options.joi)`, and passes the first error, or
    `undefined`, to `done`.
+4. If any of this fails (a property that mixes Joi schemas and shape
+   builders, a schema from another Joi copy, a `joi$` function that
+   throws or returns something else than a Joi schema), the modifier
+   does not throw. It logs an error entry and sets an
+   `actdef.validate` that rejects every message with a
+   `joi_invalid_rules` error.
 
 Seneca calls `actdef.validate` from its inward pipeline before the
-action runs, and turns an error into `act_invalid_msg`. Only the error
-is used; the value returned by Joi is discarded.
+action runs, but only when the definition has no `actdef.shape`, which
+is why the modifier deletes it. Seneca turns an error into
+`act_invalid_msg`. Only the error is used; the value returned by Joi is
+discarded.
 
 The plugin has no `defaults`, no `errors`, no exports through
 `seneca.export`, and adds no action patterns.

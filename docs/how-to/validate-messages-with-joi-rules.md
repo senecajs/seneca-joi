@@ -45,8 +45,31 @@ seneca.add(
 Properties with scalar values (`role`, `cmd`) match messages. Properties
 with object values are rules: Seneca removes them from the pattern
 (`seneca.find` reports the pattern `cmd:price,role:shop`) and the plugin
-compiles them into `Joi.object().keys(rules).unknown()`. Properties that
-are not named in the rules are allowed.
+compiles the Joi ones into `Joi.object().keys(joiRules).unknown()`.
+Properties that are not named in the rules are allowed.
+
+Rules that are not Joi schemas, such as `seneca.valid` shape builders,
+`String` or plain values, stay with Seneca's own validation, so one
+pattern can hold both:
+
+```js
+const { Default } = seneca.valid
+
+seneca.add(
+  {
+    role: 'shop',
+    cmd: 'price',
+    item: Joi.string().required(), // Joi
+    quantity: Default(1), // Seneca's shape: a number, 1 by default
+  },
+  action
+)
+```
+
+Seneca's shape runs first and writes its defaults into the message, then
+Joi. Keep each property to one kind: a property that holds both, such as
+`{ c: Joi.string(), d: Default(1) }`, makes the action reject every
+message with `joi_invalid_rules` (see [Errors](../reference/errors.md#rules-the-plugin-cannot-use)).
 
 The rules can also be a separate argument:
 
@@ -88,8 +111,8 @@ seneca.act('role:shop,cmd:price,quantity:0', function (err, out) {
 })
 ```
 
-With promises (Seneca 4, or Seneca 3 with seneca-promisify) the promise
-rejects with the same error:
+With promises (`seneca.post`, built into Seneca 4) the promise rejects
+with the same error:
 
 ```js
 try {
@@ -130,7 +153,7 @@ test('price needs an item', async () => {
     code: 'act_invalid_msg',
   })
 
-  await new Promise((resolve) => seneca.close(resolve))
+  await seneca.close()
 })
 ```
 
@@ -144,7 +167,10 @@ test('price needs an item', async () => {
 * Only the message is validated, never the reply.
 * The plugin calls `schema.validate`, the synchronous Joi API. Rules that
   need `validateAsync`, such as `external`, cannot be used.
-* Once the plugin is loaded, Joi compiles the rules of every action that
-  has rules, including plain object rules and rules written for Seneca 4's
-  Gubu validation. See [What Joi makes of rule values](../reference/api.md#what-joi-makes-of-rule-values)
-  before mixing the two.
+* Plain object rules without a Joi schema, such as `{ c: 2 }`, are not
+  Joi rules: Seneca's shape validates them, with the shape meaning (an
+  object whose `c` is a number, 2 by default). Write
+  `Joi.object({ c: Joi.valid(2) })` for the Joi meaning. See
+  [Rule values](../reference/api.md#rule-values).
+* Rules in the action function's `validate` property are validated only
+  when they are Joi rules: Seneca builds no shape from that property.

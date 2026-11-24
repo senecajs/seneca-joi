@@ -23,5 +23,5 @@ test('price needs an item', async () => {
     code: 'act_invalid_msg',
   })
 
-  await new Promise((resolve) => seneca.close(resolve))
+  await seneca.close()
 })

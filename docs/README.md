@@ -22,21 +22,21 @@ each one runs with `node docs/examples/<name>.js` from a checkout.
 | [Customize the schema with joi$](how-to/customize-the-schema-with-joi.md) | Full control of the Joi schema: dependent properties, preferences per action, closing the schema. |
 | [Pass Joi options](how-to/pass-joi-options.md) | `abortEarly`, `convert`, `presence` and other Joi options for the whole instance. |
 | [Migrate from parambulator rules](how-to/migrate-from-parambulator.md) | The `legacy` option and a conversion table from parambulator to Joi. |
-| [Migrate to Seneca 4 built in validation](how-to/migrate-to-gubu-validation.md) | Comparison with Gubu and the steps to drop the plugin on Seneca 4. |
+| [Migrate to Seneca 4 built in validation](how-to/migrate-to-shape-validation.md) | Comparison with Seneca 4's shape validation and the steps to drop the plugin. |
 
 ## Reference
 
 | Reference | Describes |
 | --------- | --------- |
 | [Options](reference/options.md) | `joi` and `legacy`. |
-| [Annotations and exports](reference/api.md) | Rules in patterns, the `validate` property, the `joi$` directive, module exports, the plugin definition. |
-| [Errors](reference/errors.md) | The `act_invalid_msg` error on Seneca 3 and 4, and compile time failures. |
+| [Annotations and exports](reference/api.md) | Which rules the plugin validates and which it leaves to Seneca, the `validate` property, the `joi$` directive, module exports, the plugin definition. |
+| [Errors](reference/errors.md) | The `act_invalid_msg` error, and `joi_invalid_rules` for rules the plugin cannot use. |
 
 ## Explanation
 
 | Explanation | Topic |
 | ----------- | ----- |
-| [How validation works](explanation/how-validation-works.md) | Preload and action modifiers, `actdef.validate`, where validation sits in the message lifecycle, Joi versus Gubu, Seneca 3 versus 4, limits. |
+| [How validation works](explanation/how-validation-works.md) | Preload and action modifiers, `actdef.validate`, where validation sits in the message lifecycle, Joi versus Seneca's shape, Seneca 4, limits. |
 
 ## Feature index
 
@@ -54,9 +54,9 @@ line flags.
 | `require('@seneca/joi').Joi` | Export | [Module exports](reference/api.md#module-exports) | [Validate messages with Joi rules](how-to/validate-messages-with-joi-rules.md) |
 | `require('@seneca/joi').intern.is_parambulator` | Export | [intern.is_parambulator](reference/api.md#detecting-parambulator-rules) | [Migrate from parambulator rules](how-to/migrate-from-parambulator.md) |
 | `preload` returning `extend.action_modifier` | Plugin definition | [Plugin definition](reference/api.md#plugin-definition) | [How validation works](explanation/how-validation-works.md) |
-| `actdef.validate`, removal of `actdef.gubu` | Action definition change | [Plugin definition](reference/api.md#plugin-definition) | [How validation works](explanation/how-validation-works.md) |
+| `actdef.validate`, removal of `actdef.shape` for actions with Joi rules | Action definition change | [Plugin definition](reference/api.md#plugin-definition) | [How validation works](explanation/how-validation-works.md) |
 | `act_invalid_msg` | Error (Seneca core code) | [Errors](reference/errors.md#rejected-messages) | [Validate messages with Joi rules](how-to/validate-messages-with-joi-rules.md#4-handle-the-error) |
-| Compile time failures (`Invalid schema content`, `Cannot mix different versions of joi schemas`) | Error | [Errors](reference/errors.md#errors-while-compiling-the-rules) | [Validate messages with Joi rules](how-to/validate-messages-with-joi-rules.md#1-load-the-plugin-first) |
+| `joi_invalid_rules` (rules the plugin cannot use: a property mixing Joi and shape, another Joi copy, a failing `joi$`) | Error (plugin code, inside `act_invalid_msg`) | [Errors](reference/errors.md#rules-the-plugin-cannot-use) | [Validate messages with Joi rules](how-to/validate-messages-with-joi-rules.md#1-load-the-plugin-first) |
 
 ## Other documents
 

@@ -10,7 +10,7 @@ seneca.add(
   {
     role: 'shop',
     cmd: 'find',
-    // schema is Joi.object().keys(rules).unknown(); actdef is the action definition
+    // schema is Joi.object().keys(joiRules).unknown(); actdef is the action definition
     joi$: function (schema, actdef) {
       return schema
         .keys({ id: Joi.string(), name: Joi.string() })

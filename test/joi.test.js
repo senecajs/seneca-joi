@@ -11,22 +11,10 @@ const JoiPlugin = require('..')
 describe('joi', function () {
   // NOTE: not using seneca.test(fin) as need to verify errors directly
 
-  // seneca-promisify provides message/post on Seneca 3; it is a no-op on
-  // Seneca 4, where promises are built in.
   function make_seneca(t) {
-    const seneca = Seneca({ log: 'silent' }).use('promisify').use(JoiPlugin)
-    t.after(() => close(seneca))
+    const seneca = Seneca({ log: 'silent' }).use(JoiPlugin)
+    t.after(() => seneca.close())
     return seneca
-  }
-
-  // Callback forms: a promise returning ready() can hang on an idle
-  // Seneca 4.0.0-rc5 instance.
-  function ready(seneca) {
-    return new Promise((resolve) => seneca.ready(resolve))
-  }
-
-  function close(seneca) {
-    return new Promise((resolve) => seneca.close(resolve))
   }
 
   it('happy', async (t) => {
@@ -128,7 +116,7 @@ describe('joi', function () {
       return { c: 3 }
     }
 
-    await ready(seneca)
+    await seneca.ready()
 
     var out = await seneca.post('a:1,b:2')
     Assert.equal(3, out.c)
@@ -141,23 +129,240 @@ describe('joi', function () {
     }
   })
 
-  // Should ignore joi rules if plugin not loaded. Seneca 3.38 compiles
-  // pattern rules into a Gubu shape unless legacy.rules is true (Seneca 4
-  // does not accept that option, and does not validate a Joi object).
+  // Without the plugin, Seneca 4 does not read Joi rules as Joi. It
+  // compiles every object valued pattern property into its own shape,
+  // which reads a Joi schema as an instance check: a valid message is
+  // rejected, and a message without the property passes, because the
+  // shape fills it in with the schema object.
   it('no-joi', async (t) => {
-    const seneca_version = require('seneca/package.json').version
-    const options = seneca_version.startsWith('3.')
-      ? { log: 'silent', legacy: { rules: true } }
-      : { log: 'silent' }
-    const seneca = Seneca(options)
-      .use('promisify')
-      .add({ a: 1, b: Joi.required() }, function (msg, reply) {
+    const seneca = Seneca({ log: 'silent' }).add(
+      { a: 1, b: Joi.required() },
+      function (msg, reply) {
         reply(null, { c: 3 })
-      })
-    t.after(() => close(seneca))
+      }
+    )
+    t.after(() => seneca.close())
+
+    await Assert.rejects(seneca.post('a:1,b:2'), {
+      code: 'act_invalid_msg',
+    })
+
+    var out = await seneca.post('a:1')
+    Assert.equal(3, out.c)
+  })
+
+  // Asserts that a post is rejected with act_invalid_msg, and returns the
+  // error for further checks.
+  async function invalid(seneca, msg) {
+    try {
+      await seneca.post(msg)
+    } catch (err) {
+      Assert.equal('act_invalid_msg', err.code)
+      return err
+    }
+    Assert.fail('expected act_invalid_msg for ' + msg)
+  }
+
+  // With the plugin, Joi replaces the shape Seneca compiles from Joi rules.
+  it('joi-replaces-shape', async (t) => {
+    const seneca = make_seneca(t).add(
+      { a: 1, b: Joi.number().required() },
+      function (msg, reply) {
+        reply(null, { b: msg.b })
+      }
+    )
+
+    await seneca.ready()
+    const actdef = seneca.find('a:1')
+    Assert.equal(void 0, actdef.shape)
+    Assert.equal('function', typeof actdef.validate)
 
     var out = await seneca.post('a:1,b:2')
-    Assert.equal(3, out.c)
+    Assert.equal(2, out.b)
+
+    var err = await invalid(seneca, 'a:1,b:x')
+    Assert.equal('"b" must be a number', err.details.message)
+    Assert.ok(err.details.error.isJoi)
+
+    err = await invalid(seneca, 'a:1')
+    Assert.equal('"b" is required', err.details.message)
+  })
+
+  // Rules that are not Joi schemas are left to Seneca, as if the plugin
+  // were not loaded: shape builders, and plain values with their shape
+  // meaning.
+  it('shape-only', async (t) => {
+    const seneca = make_seneca(t)
+    const { Required, Default, Any } = seneca.valid
+
+    seneca
+      .add({ a: 1, b: Required(String), c: Default(5) }, function (msg, reply) {
+        reply(null, { b: msg.b, c: msg.c })
+      })
+      .add({ a: 2, b: { c: 2 } }, function (msg, reply) {
+        reply(null, { b: msg.b })
+      })
+
+    // Shape rules on the action function, as @seneca/doc 9 writes for its
+    // own actions. Seneca does not build a shape from them, so they are
+    // documentation only, with or without this plugin.
+    function described(msg, reply) {
+      reply(null, { ok: true })
+    }
+    described.validate = {
+      pin: Required(Any()).Describe('The pin sub pattern.'),
+    }
+    seneca.add('a:3', described)
+
+    await seneca.ready()
+
+    const a1 = seneca.find('a:1')
+    Assert.equal('function', typeof a1.shape)
+    Assert.equal(void 0, a1.validate)
+
+    var out = await seneca.post('a:1,b:x')
+    Assert.deepEqual({ b: 'x', c: 5 }, out)
+
+    var err = await invalid(seneca, 'a:1')
+    Assert.equal('b', err.details.props[0].path)
+
+    // Shape meaning: an object whose c is a number, 2 by default.
+    out = await seneca.post('a:2,b:{c:3}')
+    Assert.deepEqual({ b: { c: 3 } }, out)
+    out = await seneca.post('a:2')
+    Assert.deepEqual({ b: { c: 2 } }, out)
+    await invalid(seneca, 'a:2,b:1')
+
+    Assert.equal(void 0, seneca.find('a:3').shape)
+    Assert.equal(void 0, seneca.find('a:3').validate)
+    out = await seneca.post('a:3')
+    Assert.deepEqual({ ok: true }, out)
+  })
+
+  // Joi validates the Joi rules, Seneca's shape validates the other
+  // pattern rules: shape first, with its defaults, then Joi.
+  it('mixed', async (t) => {
+    const seneca = make_seneca(t)
+    const { Required, Default } = seneca.valid
+
+    seneca
+      .add(
+        { a: 1, b: Joi.number().required(), c: Default(5), d: { e: 2 } },
+        function (msg, reply) {
+          reply(null, { b: msg.b, c: msg.c, d: msg.d })
+        }
+      )
+      .add(
+        {
+          a: 2,
+          c: Required(String),
+          joi$: (schema) => schema.keys({ b: Joi.number().required() }),
+        },
+        function (msg, reply) {
+          reply(null, { b: msg.b, c: msg.c })
+        }
+      )
+
+    await seneca.ready()
+    Assert.equal(void 0, seneca.find('a:1').shape)
+    Assert.equal('function', typeof seneca.find('a:1').validate)
+
+    var out = await seneca.post('a:1,b:2')
+    Assert.deepEqual({ b: 2, c: 5, d: { e: 2 } }, out)
+
+    var err = await invalid(seneca, 'a:1,b:x')
+    Assert.equal('"b" must be a number', err.details.message)
+
+    err = await invalid(seneca, 'a:1,b:2,c:x')
+    Assert.equal('c', err.details.props[0].path)
+    Assert.equal(void 0, err.details.error)
+
+    err = await invalid(seneca, 'a:1,b:2,d:{e:x}')
+    Assert.equal('d.e', err.details.props[0].path)
+
+    err = await invalid(seneca, 'a:2')
+    Assert.equal('c', err.details.props[0].path)
+
+    err = await invalid(seneca, 'a:2,c:x')
+    Assert.equal('"b" is required', err.details.message)
+
+    out = await seneca.post('a:2,c:x,b:1')
+    Assert.deepEqual({ b: 1, c: 'x' }, out)
+  })
+
+  // Rules the plugin cannot use never throw (an exception from the
+  // modifier would be uncaught): the action rejects every message with
+  // a joi_invalid_rules error.
+  it('invalid-rules', async (t) => {
+    const seneca = make_seneca(t)
+    const { Default } = seneca.valid
+
+    seneca
+      .add(
+        { a: 1, b: { c: Joi.string(), d: Default(1) } },
+        function (msg, reply) {
+          reply(null, { ok: true })
+        }
+      )
+      .add(
+        {
+          a: 2,
+          joi$: function () {
+            throw new Error('bad joi$')
+          },
+        },
+        function (msg, reply) {
+          reply(null, { ok: true })
+        }
+      )
+      .add({ a: 3, joi$: () => ({ not: 'a schema' }) }, function (msg, reply) {
+        reply(null, { ok: true })
+      })
+
+    // A schema from another Joi version (simulated).
+    const foreign = Object.create(Joi.string())
+    foreign[Symbol.for('@hapi/joi/schema')] = { version: '16.0.0' }
+    seneca.add({ a: 4, b: foreign }, function (msg, reply) {
+      reply(null, { ok: true })
+    })
+
+    await seneca.ready()
+
+    var err = await invalid(seneca, 'a:1,b:{c:x}')
+    Assert.equal('joi_invalid_rules', err.details.error.code)
+    Assert.match(
+      err.details.message,
+      /property "b" mixes Joi schemas and shape/
+    )
+    Assert.equal(void 0, seneca.find('a:1').shape)
+
+    err = await invalid(seneca, 'a:2')
+    Assert.equal('joi_invalid_rules', err.details.error.code)
+    Assert.match(err.details.message, /bad joi\$/)
+
+    err = await invalid(seneca, 'a:3')
+    Assert.equal('joi_invalid_rules', err.details.error.code)
+    Assert.match(err.details.message, /joi\$ did not return a Joi schema/)
+
+    err = await invalid(seneca, 'a:4,b:x')
+    Assert.equal('joi_invalid_rules', err.details.error.code)
+    Assert.match(err.details.message, /Cannot mix different versions of joi/)
+  })
+
+  it('rule_kind', async () => {
+    const seneca = Seneca({ log: 'silent' })
+    const { Required } = seneca.valid
+    const { rule_kind } = JoiPlugin.intern
+
+    Assert.equal('joi', rule_kind(Joi.string()))
+    Assert.equal('joi', rule_kind({ c: { d: Joi.string() } }))
+    Assert.equal('joi', rule_kind([1, Joi.string()]))
+    Assert.equal('other', rule_kind(Required(String)))
+    Assert.equal('other', rule_kind(seneca.valid({ x: Number })))
+    Assert.equal('other', rule_kind(String))
+    Assert.equal('other', rule_kind({ c: 2 }))
+    Assert.equal('mixed', rule_kind({ c: Joi.string(), d: Required(String) }))
+    await seneca.close()
   })
 
   it('custom', async (t) => {
@@ -209,7 +414,6 @@ describe('joi', function () {
 
   it('parambulator-legacy', async (t) => {
     var seneca = Seneca({ log: 'silent' })
-      .use('promisify')
       .use(JoiPlugin, { legacy: true })
       .add(
         {
@@ -246,7 +450,7 @@ describe('joi', function () {
           reply(null, { c: 3 })
         }
       )
-    t.after(() => close(seneca))
+    t.after(() => seneca.close())
 
     var out = await seneca.post('a:0')
     Assert.equal(0, out.c)
@@ -254,14 +458,16 @@ describe('joi', function () {
     out = await seneca.post('a:1,x:1')
     Assert.equal(1, out.c)
 
+    // Seneca's shape would reject b:1 (not an object); legacy removes it.
     out = await seneca.post('a:2,b:1')
     Assert.equal(2, out.c)
+    Assert.equal(void 0, seneca.find('a:2').shape)
+    Assert.equal(void 0, seneca.find('a:2').validate)
 
     out = await seneca.post('a:3,b:1')
     Assert.equal(3, out.c)
 
     const seneca2 = Seneca({ log: 'silent' })
-      .use('promisify')
       .use(JoiPlugin, { legacy: false })
       .add(
         {
@@ -280,7 +486,7 @@ describe('joi', function () {
           reply(null, { c: 1 })
         }
       )
-    t.after(() => close(seneca2))
+    t.after(() => seneca2.close())
 
     out = await seneca2.post('a:0,b:1')
     Assert.equal(0, out.c)
@@ -297,6 +503,15 @@ describe('joi', function () {
   })
 
   it('is_parambulator', async () => {
+    const si = Seneca({ log: 'silent' })
+    Assert.ok(
+      !JoiPlugin.intern.is_parambulator({
+        b: si.valid.Required(String),
+        c: Joi.string(),
+      })
+    )
+    await si.close()
+
     Assert.ok(
       JoiPlugin.intern.is_parambulator({
         empty: null,
@@ -317,15 +532,13 @@ describe('joi', function () {
     )
   })
 
-  it('parambulator-legacy test default value seneca > 3.x', async (t) => {
+  // Without legacy: true, parambulator style rules are not Joi rules: the
+  // plugin leaves them to Seneca's shape, which rejects b:1 (not an object).
+  it('parambulator-legacy default', async (t) => {
     var si = Seneca({ log: 'silent' })
-    t.after(() => close(si))
+    t.after(() => si.close())
 
-    if (si.version < '3.0.0') {
-      return
-    }
-
-    si.use(JoiPlugin).use('promisify')
+    si.use(JoiPlugin)
 
     si.add(
       {
@@ -337,7 +550,7 @@ describe('joi', function () {
       }
     )
 
-    await ready(si)
+    await si.ready()
 
     try {
       await si.post('a:2,b:1')

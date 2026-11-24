@@ -1,6 +1,6 @@
 {
   "name": "@seneca/joi",
-  "version": "7.1.0",
+  "version": "8.0.0",
   "description": "Seneca plugin that provides joi message validation.",
   "main": "joi.js",
   "license": "MIT",
@@ -18,7 +18,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/senecajs/seneca-joi"
+    "url": "git+https://github.com/senecajs/seneca-joi.git"
   },
   "keywords": [
     "seneca",
@@ -31,17 +31,22 @@
     "@hapi/joi": "^17.1.1"
   },
   "peerDependencies": {
-    "seneca": ">=2 || >=4.0.0-rc5"
+    "seneca": "^4.0.0"
   },
   "devDependencies": {
     "prettier": "^2.0.5",
-    "seneca": "^4.0.0-rc5",
-    "seneca-promisify": "^3.7.2"
+    "seneca": "^4.0.0"
   },
   "files": [
     "README.md",
     "LICENSE",
     "joi.js",
     "docs"
-  ]
+  ],
+  "engines": {
+    "node": ">=24"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
 }
